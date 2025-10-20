@@ -1,8 +1,22 @@
 import autograd.numpy as np  # We need to use this numpy wrapper to make automatic differentiation work later
 from autograd import grad, elementwise_grad
 from sklearn import datasets
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
+from training import _TrainingMethod
+from step_methods import _StepMethod
+
+def normalize_input_target(inputs,targets,test_size = 0.0): 
+    train_inputs, test_inputs, train_targets, test_targets = train_test_split(inputs, targets, test_size=test_size,random_state=35)
+    scaler = StandardScaler()
+    train_inputs = scaler.fit_transform(train_inputs)
+    test_inputs = scaler.transform(test_inputs)
+    if test_size != 0: 
+        return train_inputs, test_inputs, train_targets, test_targets
+    else: 
+        return train_inputs, train_targets
 
 class NeuralNetwork:
     def __init__(
@@ -24,27 +38,25 @@ class NeuralNetwork:
         
     def create_layers_batch(self):
         layers = []
-
         i_size = self.network_input_size
         for layer_output_size in self.layer_output_sizes:
             W = np.random.randn(layer_output_size, i_size).T
             b = np.random.randn(layer_output_size)
             layers.append((W, b))
-
             i_size = layer_output_size
         return layers
 
     def predict(self, inputs):
         # Simple feed forward pass
-        pass
+        return self.feed_forward_batch(inputs)
 
-    def cost_batch(self,layers, inputs, activation_funcs, targets):
-        predict = self.feed_forward_batch(inputs, layers, activation_funcs)
+    def cost_batch(self,inputs, targets):
+        predict = self.feed_forward_batch(inputs)
         return self.cost_fun(predict, targets)
 
-    def feed_forward_batch(self,inputs, layers, activation_funcs):
+    def feed_forward_batch(self,inputs):
         a = inputs
-        for (W, b), activation_func in zip(layers, activation_funcs):
+        for (W, b), activation_func in zip(self.layers, self.activation_funcs):
             z = a @ W + b
             a = activation_func(z)
         return a
@@ -63,22 +75,22 @@ class NeuralNetwork:
         return layer_inputs, zs, a
     
     def backpropagation_batch(self,
-        input,target
+        input,target, layers
     ):
-        layer_inputs, zs, predict = self.feed_forward_saver_batch(input, self.layers, self.activation_funcs)
+        layer_inputs, zs, predict = self.feed_forward_saver_batch(input)
 
-        layer_grads = [() for layer in self.layers]
+        layer_grads = [() for layer in layers]
 
         # We loop over the layers, from the last to the first
-        for i in reversed(range(len(self.layers))):
+        for i in reversed(range(len(layers))):
             layer_input, z, activation_der = layer_inputs[i], zs[i], self.activation_ders[i]
 
-            if i == len(self.layers) - 1:
+            if i == len(layers) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
                 dC_da = self.cost_der(predict, target)
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
-                (W, b) = self.layers[i + 1]
+                (W, b) = layers[i + 1]
                 dC_da = dC_dz @ W.T
 
             dC_dz = dC_da*activation_der(z)
@@ -89,11 +101,11 @@ class NeuralNetwork:
 
         return layer_grads
 
-    def compute_gradient(self, inputs, targets):
-        return self.backpropagation_batch(inputs, self.layers, self.activation_funcs, targets, self.activation_ders)
+    def compute_gradient(self, inputs, targets, layers):
+        return self.backpropagation_batch(inputs, targets, layers)
 
-    def update_weights(self, layer_grads):
-        pass
+    def train(self, GD_method,num_iterations,n_batches = 5):
+        self.layers = GD_method.train(self.compute_gradient,self.layers,num_iterations,n_batches)
 
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers, inputs):
