@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 import numpy
+from numpy.typing import NDArray
 import autograd.numpy as np # type: ignore
 np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
 
@@ -11,7 +12,7 @@ class _ActivationFunction(ABC):
         pass
 
     @abstractmethod
-    def derivative(self, z) -> Any:
+    def derivative(self, z) -> NDArray:
         pass
 
 
@@ -28,7 +29,7 @@ class Identity(_ActivationFunction):
         return z
     
     def derivative(self, z):
-        return 1
+        return np.ones_like(z)
 
 class ReLU(_ActivationFunction):
     def __call__(self, z):
