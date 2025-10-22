@@ -2,16 +2,11 @@ import numpy
 import autograd.numpy as np # type: ignore
 np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
 
-from autograd import grad, elementwise_grad
-from sklearn import datasets
+from autograd import grad
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
 from .activation_functions import _ActivationFunction
 from .cost_functions import _CostFunction
-from .training import _TrainingMethod
-from .step_methods import _StepMethod
 
 def normalize_input_target(inputs,targets,test_size = 0.0): 
     train_inputs, test_inputs, train_targets, test_targets = train_test_split(inputs, targets, test_size=test_size,random_state=35)
