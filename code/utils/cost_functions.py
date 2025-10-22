@@ -70,3 +70,14 @@ class BinaryCrossEntropy(_CostFunction):
         return ((1-y_true)/(1-y_pred) - y_true/y_pred) / y_true.size
 
 
+class MulticlassCrossEntropy(_CostFunction):
+    def __call__(self, y_pred, y_true, params: None | NDArray = None):
+        if self.regularization and params is None:
+            raise ValueError("params must be provided when using regularization")
+        
+        cross_entropy = - np.sum(y_true*np.log(y_pred)) / y_true.shape[0]
+
+        return cross_entropy + self.apply_regularization(params)
+
+    def derivative(self, y_pred, y_true):
+        return - (y_true/y_pred) / y_true.shape[0]
