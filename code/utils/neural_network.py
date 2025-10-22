@@ -1,4 +1,7 @@
-import autograd.numpy as np  # We need to use this numpy wrapper to make automatic differentiation work later
+import numpy
+import autograd.numpy as np # type: ignore
+np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
+
 from autograd import grad, elementwise_grad
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
