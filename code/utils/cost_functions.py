@@ -1,7 +1,7 @@
 from typing import Literal
 from abc import ABC, abstractmethod
 from numpy.typing import NDArray
-from activation_functions import Softmax
+from .activation_functions import Softmax
 import numpy
 import autograd.numpy as np # type: ignore
 np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
