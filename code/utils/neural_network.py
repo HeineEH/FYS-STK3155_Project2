@@ -80,7 +80,7 @@ class NeuralNetwork:
     ):
         layer_inputs, zs, predict = self.feed_forward_saver_batch(input)
 
-        layer_grads = [() for layer in layers]
+        layer_grads = [(None, None) for layer in layers]
 
         # We loop over the layers, from the last to the first
         for i in reversed(range(len(layers))):
