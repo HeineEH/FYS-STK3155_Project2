@@ -25,17 +25,13 @@ class NeuralNetwork:
         self,
         network_input_size,
         layer_output_sizes,
-        activation_funcs,
-        activation_ders,
-        cost_fun,
-        cost_der,
+        activation_funcs: list[_ActivationFunction],
+        cost_fun: _CostFunction,
     ):
         self.network_input_size = network_input_size
         self.layer_output_sizes = layer_output_sizes
         self.activation_funcs = activation_funcs
-        self.activation_ders = activation_ders
         self.cost_fun = cost_fun
-        self.cost_der = cost_der
         self.layers = self.create_layers_batch()
         
     def create_layers_batch(self):
@@ -85,11 +81,11 @@ class NeuralNetwork:
 
         # We loop over the layers, from the last to the first
         for i in reversed(range(len(layers))):
-            layer_input, z, activation_der = layer_inputs[i], zs[i], self.activation_ders[i]
+            layer_input, z, activation_der = layer_inputs[i], zs[i], self.activation_funcs[i].derivative
 
             if i == len(layers) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                dC_da = self.cost_der(predict, target)
+                dC_da = self.cost_fun.derivative(predict, target)
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W, b) = layers[i + 1]
