@@ -1,6 +1,7 @@
 from typing import Literal
 from abc import ABC, abstractmethod
 from numpy.typing import NDArray
+from activation_functions import Softmax
 import numpy
 import autograd.numpy as np # type: ignore
 np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
@@ -70,14 +71,25 @@ class BinaryCrossEntropy(_CostFunction):
         return ((1-y_true)/(1-y_pred) - y_true/y_pred) / y_true.size
 
 
-class MulticlassCrossEntropy(_CostFunction):
+class SoftmaxCrossEntropy(_CostFunction):
+    """Multiclass cross-entropy with softmax activation included"""
+
+    softmax = Softmax()
+    
     def __call__(self, y_pred, y_true, params: None | NDArray = None):
         if self.regularization and params is None:
             raise ValueError("params must be provided when using regularization")
         
-        cross_entropy = - np.sum(y_true*np.log(y_pred)) / y_true.shape[0]
+        # y_pred is now the pre-activation z-values for the last layer
+        # First apply softmax activation.
+        probs = self.softmax(y_pred)
+
+        # Then compute cross-entropy
+        eps = 1e-12  # prevent log(0)
+        cross_entropy = - np.sum(y_true*np.log(probs+eps)) / y_true.shape[0]
 
         return cross_entropy + self.apply_regularization(params)
 
     def derivative(self, y_pred, y_true):
-        return - (y_true/y_pred) / y_true.shape[0]
+        probs = self.softmax(y_pred)
+        return (probs-y_true) / y_true.shape[0]
