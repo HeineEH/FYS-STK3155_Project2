@@ -22,7 +22,7 @@ class Sigmoid(_ActivationFunction):
     def derivative(self, z):
         sig = self.__call__(z)
         return sig * (1 - sig)
-
+    
 class Identity(_ActivationFunction):
     def __call__(self, z):
         return z

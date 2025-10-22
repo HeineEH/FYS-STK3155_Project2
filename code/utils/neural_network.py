@@ -37,7 +37,7 @@ class NeuralNetwork:
         i_size = self.network_input_size
         for layer_output_size in self.layer_output_sizes:
             W = np.random.randn(layer_output_size, i_size).T
-            b = np.random.randn(layer_output_size)
+            b = np.ones(layer_output_size)*0.01
             layers.append((W, b))
             i_size = layer_output_size
         return layers

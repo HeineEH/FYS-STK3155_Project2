@@ -46,9 +46,9 @@ class StochasticGradientDescent(_TrainingMethod):
 
     def train(self, gradient, layers, epochs: int = 1000, n_batches: int = 5) -> tuple[npt.ArrayLike, npt.ArrayLike]:
 
-        initial_learning_rate = self.step_method.learning_rate
         n_datapoints = self.inputs[0]
         batch_size = int(n_datapoints/n_batches)
+        initial_learning_rate = self.step_method.learning_rate/n_batches   # divide by number of batches to take care of bias in cost functions
         self.step_method.setup(layers)
         
         for i in range(epochs):
