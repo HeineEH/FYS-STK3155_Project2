@@ -57,18 +57,16 @@ class MSE(_CostFunction):
         return (2 / y_true.size) * (y_pred-y_true)
 
 
-# Test derivative equal with autograd
-from autograd import grad
+class BinaryCrossEntropy(_CostFunction):
+    def __call__(self, y_pred, y_true, params: None | NDArray = None):
+        if self.regularization and params is None:
+            raise ValueError("params must be provided when using regularization")
+        
+        cross_entropy = -np.sum(y_true*np.log(y_pred) + (1-y_true)*np.log(1-y_pred)) / y_true.size
 
-weights = np.random.randn(1, 1)
-x = np.linspace(0, 1, 5)[:, None]
-y_true = x**2
-y_pred = x @ weights
+        return cross_entropy + self.apply_regularization(params)
+
+    def derivative(self, y_pred, y_true):
+        return ((1-y_true)/(1-y_pred) - y_true/y_pred) / y_true.size
 
 
-cost = MSE('L1', lambd=0.1)
-own_der = cost.derivative(y_pred, y_true)
-autograd_der = grad(cost, 0)(y_pred, y_true, weights)
-print(f"Own implementation:\n{own_der}")
-print(f"Autograd:\n{autograd_der}")
-print(f"Equal: {np.allclose(own_der, autograd_der)}")
