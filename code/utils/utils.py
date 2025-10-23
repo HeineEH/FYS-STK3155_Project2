@@ -1,0 +1,17 @@
+import numpy
+from numpy.typing import NDArray
+import autograd.numpy as np # type: ignore
+np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
+
+from numpy.typing import NDArray
+from typing import TypeVar
+
+T = TypeVar("T", float, NDArray[numpy.floating])
+def runge(x: T) -> T:
+    return 1/(1 + 25*x**2)
+
+def generate_dataset(num: int = 400):
+    x = np.linspace(-1, 1, num)
+    np.random.shuffle(x)
+    y = runge(x) + 0.05*np.random.normal(0, 1, num)
+    return x, y
