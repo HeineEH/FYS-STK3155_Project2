@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import TypeVar
 
-T = TypeVar("T", float, NDArray[np.float64])
+T = TypeVar("T", float, NDArray[np.floating])
 def runge(x: T) -> T:
     return 1/(1 + 25*x**2)
 

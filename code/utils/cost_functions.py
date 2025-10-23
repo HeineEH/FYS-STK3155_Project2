@@ -21,18 +21,18 @@ class CostFunction(ABC):
         self.lambd = lambd
 
     @abstractmethod
-    def __call__(self, y_pred: NDArray[numpy.float64], y_true: NDArray[numpy.float64], params: None | NDArray[numpy.float64] = None) -> float:
+    def __call__(self, y_pred: NDArray[numpy.floating], y_true: NDArray[numpy.floating], params: None | NDArray[numpy.floating] = None) -> float:
         pass
 
     @abstractmethod
-    def derivative(self, y_pred: NDArray[numpy.float64], y_true: NDArray[numpy.float64]) -> NDArray[numpy.float64]:
+    def derivative(self, y_pred: NDArray[numpy.floating], y_true: NDArray[numpy.floating]) -> NDArray[numpy.floating]:
         """Derivative with respect to `y_pred`"""
         pass
 
-    def _l1(self, params: NDArray[numpy.float64]) -> float: return self.lambd*np.sum(np.abs(params))
-    def _l2(self, params: NDArray[numpy.float64]) -> float: return self.lambd*np.sum(params**2)
+    def _l1(self, params: NDArray[numpy.floating]) -> float: return self.lambd*np.sum(np.abs(params))
+    def _l2(self, params: NDArray[numpy.floating]) -> float: return self.lambd*np.sum(params**2).item()
 
-    def apply_regularization(self, params: None | NDArray[numpy.float64]):
+    def apply_regularization(self, params: None | NDArray[numpy.floating]):
         if self.regularization and params is None:
             raise ValueError(f"params must be provided when using regularization ({self.regularization})")
 
