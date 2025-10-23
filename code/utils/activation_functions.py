@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Any
 import numpy
 from numpy.typing import NDArray
 import autograd.numpy as np # type: ignore
@@ -8,12 +7,10 @@ np: numpy = np # type: ignore . Workaround to not get type errors when using aut
 
 class _ActivationFunction(ABC):
     @abstractmethod
-    def __call__(self, z):
-        pass
+    def __call__(self, z: NDArray[numpy.float64]) -> NDArray[numpy.float64]: ...
 
     @abstractmethod
-    def derivative(self, z) -> NDArray:
-        pass
+    def derivative(self, z: NDArray[numpy.float64]) -> NDArray[numpy.float64]: ...
 
 
 class Sigmoid(_ActivationFunction):
@@ -45,5 +42,5 @@ class Softmax(_ActivationFunction):
         exp_z = np.exp(z_shift) 
         return exp_z / np.sum(exp_z, axis=1, keepdims=True)
 
-    def derivative(self, z):
+    def derivative(self, z): # type: ignore
         raise NotImplementedError("Derivative of Softmax is not implemented. Use `SoftmaxCrossEntropy` cost function instead, with no last layer activation (identity func).")
