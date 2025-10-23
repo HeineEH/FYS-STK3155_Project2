@@ -8,15 +8,6 @@ from sklearn.model_selection import train_test_split
 from .activation_functions import ActivationFunction
 from .cost_functions import CostFunction
 
-def normalize_input_target(inputs,targets,test_size = 0.0): 
-    train_inputs, test_inputs, train_targets, test_targets = train_test_split(inputs, targets, test_size=test_size,random_state=35)
-    scaler = StandardScaler()
-    train_inputs = scaler.fit_transform(train_inputs)
-    test_inputs = scaler.transform(test_inputs)
-    if test_size != 0: 
-        return train_inputs, test_inputs, train_targets, test_targets
-    else: 
-        return train_inputs, train_targets
 
 class NeuralNetwork:
     def __init__(
