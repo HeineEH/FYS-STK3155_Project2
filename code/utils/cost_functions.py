@@ -6,7 +6,7 @@ import numpy
 import autograd.numpy as np # type: ignore
 np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
 
-class _CostFunction(ABC):
+class CostFunction(ABC):
     regularization: None | Literal["L1", "L2"]
 
     def __init__(self, regularization: None | Literal["L1", "L2"] = None, lambd: float = 0):
@@ -47,7 +47,7 @@ class _CostFunction(ABC):
         return 0. # No regularization applied
 
 
-class MSE(_CostFunction):
+class MSE(CostFunction):
     def __call__(self, y_pred, y_true, params = None):
         if self.regularization and params is None:
             raise ValueError("params must be provided when using regularization")
@@ -59,7 +59,7 @@ class MSE(_CostFunction):
         return (2 / y_true.size) * (y_pred-y_true)
 
 
-class BinaryCrossEntropy(_CostFunction):
+class BinaryCrossEntropy(CostFunction):
     def __call__(self, y_pred, y_true, params = None):
         if self.regularization and params is None:
             raise ValueError("params must be provided when using regularization")
@@ -72,7 +72,7 @@ class BinaryCrossEntropy(_CostFunction):
         return ((1-y_true)/(1-y_pred) - y_true/y_pred) / y_true.size
 
 
-class SoftmaxCrossEntropy(_CostFunction):
+class SoftmaxCrossEntropy(CostFunction):
     """Multiclass cross-entropy with softmax activation included"""
 
     softmax = Softmax()

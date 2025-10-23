@@ -7,11 +7,11 @@ np: numpy = np # type: ignore . Workaround to not get type errors when using aut
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from training import _TrainingMethod
+    from training import TrainingMethod
 
 # Template for step methods, like gd-momentum, RMSprop, ADAgrad
-class _StepMethod(ABC):
-    caller: "_TrainingMethod"
+class StepMethod(ABC):
+    caller: "TrainingMethod"
     learning_rate: float
     @abstractmethod
     def setup(self, starting_layers: NDArray[numpy.floating]) -> None: ...
@@ -23,7 +23,7 @@ class _StepMethod(ABC):
 
 # ========== Step methods ==========
 
-class ConstantLearningRateStep(_StepMethod):
+class ConstantLearningRateStep(StepMethod):
     def __init__(self, learning_rate: float) -> None:
         self.learning_rate = learning_rate
     
@@ -36,7 +36,7 @@ class ConstantLearningRateStep(_StepMethod):
             b -= self.training_increment(b_g)
         return layers
 
-class MomentumStep(_StepMethod):
+class MomentumStep(StepMethod):
     def __init__(self, learning_rate: float, momentum: float) -> None:
         self.learning_rate = learning_rate
         self.momentum = momentum
@@ -59,7 +59,7 @@ class MomentumStep(_StepMethod):
         return layers
 
 
-class ADAgradStep(_StepMethod):
+class ADAgradStep(StepMethod):
     def __init__(self, learning_rate: float, error: float = 1e-8) -> None:
         self.learning_rate = learning_rate
         self.error = error
@@ -82,7 +82,7 @@ class ADAgradStep(_StepMethod):
             b -= b_i
         return layers
 
-class RMSpropStep(_StepMethod):
+class RMSpropStep(StepMethod):
     def __init__(self, learning_rate: float, decay_rate: float, error: float = 1e-8) -> None:
         self.learning_rate = learning_rate
         self.decay_rate = decay_rate
@@ -106,7 +106,7 @@ class RMSpropStep(_StepMethod):
             b -= b_i
         return layers       
     
-class AdamStep(_StepMethod):
+class AdamStep(StepMethod):
     def __init__(self, learning_rate: float, beta1: float = 0.9, beta2: float = 0.999, error: float = 1e-8) -> None:
         self.learning_rate = learning_rate
         self.beta1 = beta1

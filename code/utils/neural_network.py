@@ -5,8 +5,8 @@ np: numpy = np # type: ignore . Workaround to not get type errors when using aut
 from autograd import grad
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from .activation_functions import _ActivationFunction
-from .cost_functions import _CostFunction
+from .activation_functions import ActivationFunction
+from .cost_functions import CostFunction
 
 def normalize_input_target(inputs,targets,test_size = 0.0): 
     train_inputs, test_inputs, train_targets, test_targets = train_test_split(inputs, targets, test_size=test_size,random_state=35)
@@ -23,8 +23,8 @@ class NeuralNetwork:
         self,
         network_input_size,
         layer_output_sizes,
-        activation_funcs: list[_ActivationFunction],
-        cost_fun: _CostFunction,
+        activation_funcs: list[ActivationFunction],
+        cost_fun: CostFunction,
     ):
         self.network_input_size = network_input_size
         self.layer_output_sizes = layer_output_sizes

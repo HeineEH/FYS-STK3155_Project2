@@ -6,13 +6,13 @@ from sklearn.model_selection import train_test_split
 from sklearn import linear_model
 
 if TYPE_CHECKING:
-    from .step_methods import _StepMethod
+    from .step_methods import StepMethod
 
 # Template for training methods, like gradient descent, and stochastic gradient descent
-class _TrainingMethod:
+class TrainingMethod:
     def __init__(
         self,
-        step_method: "_StepMethod",
+        step_method: "StepMethod",
         inputs, 
         targets,
     ) -> None:
@@ -32,7 +32,7 @@ class _TrainingMethod:
 
 # ========== Training methods ==========
 
-class GradientDescent(_TrainingMethod):
+class GradientDescent(TrainingMethod):
     def train(self, gradient, layers: npt.ArrayLike, iterations: int = 1000,n_batches = 5) -> tuple[npt.ArrayLike, npt.ArrayLike]:
         self.step_method.setup(layers)
         for i in range(iterations):
@@ -40,7 +40,7 @@ class GradientDescent(_TrainingMethod):
             layers = self.step_method.train_step(layers_grad,layers) 
         return layers
                 
-class StochasticGradientDescent(_TrainingMethod): 
+class StochasticGradientDescent(TrainingMethod): 
     def learning_schedule(self,t,t0,t1): 
         return t0/(t + t1)
 
