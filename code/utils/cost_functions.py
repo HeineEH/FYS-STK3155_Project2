@@ -54,9 +54,6 @@ class CostFunction(ABC):
 
 class MSE(CostFunction):
     def __call__(self, y_pred, y_true, params = None):
-        if self.regularization and params is None:
-            raise ValueError("params must be provided when using regularization")
-        
         mse = np.mean((y_true - y_pred) ** 2)
         return mse + self.apply_regularization(params)
     
@@ -66,9 +63,6 @@ class MSE(CostFunction):
 
 class BinaryCrossEntropy(CostFunction):
     def __call__(self, y_pred, y_true, params = None):
-        if self.regularization and params is None:
-            raise ValueError("params must be provided when using regularization")
-        
         cross_entropy = -np.sum(y_true*np.log(y_pred) + (1-y_true)*np.log(1-y_pred)) / y_true.size
 
         return cross_entropy + self.apply_regularization(params)
@@ -83,9 +77,6 @@ class SoftmaxCrossEntropy(CostFunction):
     softmax = Softmax()
     
     def __call__(self, y_pred, y_true, params = None) -> float:
-        if self.regularization and params is None:
-            raise ValueError("params must be provided when using regularization")
-        
         # y_pred is now the pre-activation z-values for the last layer
         # First apply softmax activation.
         probs = self.softmax(y_pred)
