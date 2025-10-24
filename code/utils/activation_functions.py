@@ -40,6 +40,15 @@ class ReLU(ActivationFunction):
     def derivative(self, z):
         return (np.where(z > 0, 1, 0))
     
+class LeakyReLU(ActivationFunction):
+    def __init__(self, negative_slope=0.01):
+        self.negative_slope = negative_slope
+    
+    def __call__(self, z):
+        return np.maximum(0, z) + self.negative_slope*np.minimum(0, z)
+
+    def derivative(self, z):
+        return (np.where(z > 0, 1, self.negative_slope))
 
 class Softmax(ActivationFunction):
     def __call__(self, z):
