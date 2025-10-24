@@ -1,0 +1,10 @@
+{
+  "typeCheckingMode": "strict",
+  "include": ["code"],
+  "reportMissingTypeStubs": "none",
+  "reportUnknownMemberType": "none",
+  "reportMissingParameterType": "none",
+  "reportConstantRedefinition": "none",
+  "venvPath": ".",
+  "venv": ".venv"
+}
