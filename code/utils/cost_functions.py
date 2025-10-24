@@ -26,7 +26,7 @@ class CostFunction(ABC):
         self.lambd = lambd
 
     @abstractmethod
-    def __call__(self, y_pred: ArrayF, y_true: ArrayF, params: None | ArrayF = None) -> float | np.floating:
+    def __call__(self, y_pred: ArrayF, y_true: ArrayF, params: None | ArrayF = None) -> np.floating:
         pass
 
     @abstractmethod
@@ -34,8 +34,8 @@ class CostFunction(ABC):
         """Derivative with respect to `y_pred`"""
         pass
 
-    def _l1(self, params: ArrayF) -> float: return self.lambd*np.sum(np.abs(params))
-    def _l2(self, params: ArrayF) -> float: return self.lambd*np.sum(params**2).item()
+    def _l1(self, params: ArrayF) -> np.floating: return self.lambd*np.sum(np.abs(params))
+    def _l2(self, params: ArrayF) -> np.floating: return self.lambd*np.sum(params**2)
 
     def apply_regularization(self, params: None | ArrayF):
         if self.regularization and params is None:
@@ -76,7 +76,7 @@ class SoftmaxCrossEntropy(CostFunction):
 
     softmax = Softmax()
     
-    def __call__(self, y_pred, y_true, params = None) -> float:
+    def __call__(self, y_pred, y_true, params = None) -> np.floating:
         # y_pred is now the pre-activation z-values for the last layer
         # First apply softmax activation.
         probs = self.softmax(y_pred)
