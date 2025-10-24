@@ -4,4 +4,5 @@ import numpy as np
 from numpy.typing import NDArray
 
 ArrayF = NDArray[np.floating]
-LayerParameters  = tuple[ArrayF, ArrayF]
+LayerParams  = tuple[ArrayF, ArrayF]
+NetworkParams = list[LayerParams]

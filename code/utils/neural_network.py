@@ -1,18 +1,16 @@
-import numpy
-import autograd.numpy as np # type: ignore
-np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
-
-from utils.training import TrainingMethod
-from typing import Sequence, cast
-from numpy.typing import NDArray
+from __future__ import annotations
 from autograd import grad # pyright: ignore[reportUnknownVariableType]
+
+# Typing
+from .typing_utils import ArrayF, NetworkParams
 from .activation_functions import ActivationFunction
 from .cost_functions import CostFunction
-
-# Type aliases
-ArrayF = NDArray[numpy.floating]
-Layer = tuple[ArrayF, ArrayF]
-Layers = list[Layer]
+from utils.training import TrainingMethod
+from typing import TYPE_CHECKING, Sequence, cast
+if TYPE_CHECKING:
+    import numpy as np  # typed NumPy for the checker
+else:
+    import autograd.numpy as np  # runtime
 
 
 class NeuralNetwork:
@@ -30,7 +28,7 @@ class NeuralNetwork:
         self.layers = self.create_layers_batch()
         
     def create_layers_batch(self):
-        layers: Layers = []
+        layers: NetworkParams = []
         i_size = self.network_input_size
         for layer_output_size in self.layer_output_sizes:
             W = np.random.randn(layer_output_size, i_size).T
@@ -67,10 +65,10 @@ class NeuralNetwork:
 
         return layer_inputs, zs, a
     
-    def backpropagation_batch(self, input: ArrayF, target: ArrayF, layers: Layers):
+    def backpropagation_batch(self, input: ArrayF, target: ArrayF, layers: NetworkParams):
         layer_inputs, zs, predict = self.feed_forward_saver_batch(input)
 
-        layer_grads: Layers = []
+        layer_grads: NetworkParams = []
 
         # We loop over the layers, from the last to the first
         dC_dz = None # Initialize this here to avoid a "possibly unbound" type-error.
@@ -95,25 +93,25 @@ class NeuralNetwork:
         layer_grads.reverse()
         return layer_grads
 
-    def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: Layers):
+    def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: NetworkParams):
         return self.backpropagation_batch(inputs, targets, layers)
 
     def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5):
-        self.layers = GD_method.train(self.compute_gradient, self.layers, num_iterations, n_batches)
+        self.layers = GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches)
 
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
-    def autograd_compliant_predict(self, layers: Layers, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):
+    def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):
         a = inputs
         for (W, b), activation_func in zip(layers, activation_funcs):
             z = a @ W + b
             a = activation_func(z)
         return a
     
-    def autograd_compliant_cost(self, layers: Layers, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction], targets: ArrayF):
+    def autograd_compliant_cost(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction], targets: ArrayF):
         prediction = self.autograd_compliant_predict(layers, inputs, activation_funcs)
         cost = self.cost_fun(prediction, targets)
         return cost
 
     def autograd_gradient(self, inputs: ArrayF, targets: ArrayF):
-        autograd_layer_grads = cast(Layers, grad(self.autograd_compliant_cost, 0)(self.layers, inputs, self.activation_funcs, targets))
+        autograd_layer_grads = cast(NetworkParams, grad(self.autograd_compliant_cost, 0)(self.layers, inputs, self.activation_funcs, targets))
         return autograd_layer_grads

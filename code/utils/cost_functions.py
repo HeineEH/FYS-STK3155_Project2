@@ -1,10 +1,15 @@
+from __future__ import annotations
 from typing import Literal
 from abc import ABC, abstractmethod
-from numpy.typing import NDArray
 from .activation_functions import Softmax
-import numpy
-import autograd.numpy as np # type: ignore
-np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
+
+# Typing
+from .typing_utils import ArrayF
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import numpy as np  # typed NumPy for the checker
+else:
+    import autograd.numpy as np  # runtime
 
 class CostFunction(ABC):
     regularization: None | Literal["L1", "L2"]
@@ -21,18 +26,18 @@ class CostFunction(ABC):
         self.lambd = lambd
 
     @abstractmethod
-    def __call__(self, y_pred: NDArray[numpy.floating], y_true: NDArray[numpy.floating], params: None | NDArray[numpy.floating] = None) -> float:
+    def __call__(self, y_pred: ArrayF, y_true: ArrayF, params: None | ArrayF = None) -> float | np.floating:
         pass
 
     @abstractmethod
-    def derivative(self, y_pred: NDArray[numpy.floating], y_true: NDArray[numpy.floating]) -> NDArray[numpy.floating]:
+    def derivative(self, y_pred: ArrayF, y_true: ArrayF) -> ArrayF:
         """Derivative with respect to `y_pred`"""
         pass
 
-    def _l1(self, params: NDArray[numpy.floating]) -> float: return self.lambd*np.sum(np.abs(params))
-    def _l2(self, params: NDArray[numpy.floating]) -> float: return self.lambd*np.sum(params**2).item()
+    def _l1(self, params: ArrayF) -> float: return self.lambd*np.sum(np.abs(params))
+    def _l2(self, params: ArrayF) -> float: return self.lambd*np.sum(params**2).item()
 
-    def apply_regularization(self, params: None | NDArray[numpy.floating]):
+    def apply_regularization(self, params: None | ArrayF):
         if self.regularization and params is None:
             raise ValueError(f"params must be provided when using regularization ({self.regularization})")
 
@@ -52,7 +57,7 @@ class MSE(CostFunction):
         if self.regularization and params is None:
             raise ValueError("params must be provided when using regularization")
         
-        mse = np.mean((y_true - y_pred) ** 2).item()
+        mse = np.mean((y_true - y_pred) ** 2)
         return mse + self.apply_regularization(params)
     
     def derivative(self, y_pred, y_true):
@@ -77,7 +82,7 @@ class SoftmaxCrossEntropy(CostFunction):
 
     softmax = Softmax()
     
-    def __call__(self, y_pred, y_true, params = None):
+    def __call__(self, y_pred, y_true, params = None) -> float:
         if self.regularization and params is None:
             raise ValueError("params must be provided when using regularization")
         
@@ -87,7 +92,7 @@ class SoftmaxCrossEntropy(CostFunction):
 
         # Then compute cross-entropy
         eps = 1e-12  # prevent log(0)
-        cross_entropy = - np.sum(y_true*np.log(probs+eps)) / y_true.shape[0]
+        cross_entropy = -np.sum(y_true*np.log(probs+eps)) / y_true.shape[0]
 
         return cross_entropy + self.apply_regularization(params)
 

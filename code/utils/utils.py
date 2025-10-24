@@ -1,12 +1,15 @@
-import numpy
-from numpy.typing import NDArray
-import autograd.numpy as np # type: ignore
-np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
+from __future__ import annotations
 
-from numpy.typing import NDArray
-from typing import TypeVar
+# Typing
+from .typing_utils import ArrayF
+from typing import TYPE_CHECKING, TypeVar
+if TYPE_CHECKING:
+    import numpy as np  # typed NumPy for the checker
+else:
+    import autograd.numpy as np  # runtime
 
-T = TypeVar("T", float, NDArray[numpy.floating])
+
+T = TypeVar("T", float, ArrayF)
 def runge(x: T) -> T:
     return 1/(1 + 25*x**2)
 

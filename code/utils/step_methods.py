@@ -1,23 +1,25 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from numpy.typing import NDArray
-import numpy
-import autograd.numpy as np # type: ignore
-np: numpy = np # type: ignore . Workaround to not get type errors when using autograd's numpy wrapper.
 
+# Typing
+from .typing_utils import ArrayF, NetworkParams
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from training import TrainingMethod
+    import numpy as np  # typed NumPy for the checker
+    from .training import TrainingMethod
+else:
+    import autograd.numpy as np  # runtime
+
 
 # Template for step methods, like gd-momentum, RMSprop, ADAgrad
 class StepMethod(ABC):
     caller: "TrainingMethod"
     learning_rate: float
     @abstractmethod
-    def setup(self, starting_layers: NDArray[numpy.floating]) -> None: ...
+    def setup(self, starting_layers: NetworkParams) -> None: ...
 
     @abstractmethod
-    def train_step(self, layers_grad: NDArray[numpy.floating], layers: NDArray[numpy.floating]) -> NDArray[numpy.floating]: ...
+    def train_step(self, layers_grad: NetworkParams, layers: NetworkParams) -> NetworkParams: ...
 
 
 
@@ -27,7 +29,7 @@ class ConstantLearningRateStep(StepMethod):
     def __init__(self, learning_rate: float) -> None:
         self.learning_rate = learning_rate
     
-    def training_increment(self, gradient: NDArray[numpy.floating]):
+    def training_increment(self, gradient: ArrayF):
         return self.learning_rate * gradient
     
     def train_step(self,layers_grad,layers):
@@ -42,11 +44,11 @@ class MomentumStep(StepMethod):
         self.momentum = momentum
     
     def setup(self, starting_layers):
-        self.velocity: list[tuple[NDArray[numpy.floating], NDArray[numpy.floating]]] = []
+        self.velocity: NetworkParams = []
         for (W,b) in starting_layers:
             self.velocity.append((np.zeros_like(W), np.zeros_like(b)))
     
-    def training_increment(self, gradient: NDArray[numpy.floating], velocity: NDArray[numpy.floating]):
+    def training_increment(self, gradient: ArrayF, velocity: ArrayF):
         velocity = self.momentum * velocity + self.learning_rate * gradient
         return velocity
     
@@ -65,11 +67,11 @@ class ADAgradStep(StepMethod):
         self.error = error
     
     def setup(self, starting_layers):
-        self.accumulated_gradient: list[tuple[NDArray[numpy.floating], NDArray[numpy.floating]]] = []
+        self.accumulated_gradient: NetworkParams = []
         for (W,b) in starting_layers:
             self.accumulated_gradient.append((np.zeros_like(W), np.zeros_like(b)))
         
-    def training_increment(self, gradient: NDArray[numpy.floating], accumulated_gradient: NDArray[numpy.floating]):
+    def training_increment(self, gradient: ArrayF, accumulated_gradient: ArrayF):
         accumulated_gradient += gradient**2  # Accumulate squared gradients
         adjusted_gradient = gradient / (np.sqrt(accumulated_gradient) + self.error)
         return self.learning_rate * adjusted_gradient, accumulated_gradient
@@ -89,11 +91,11 @@ class RMSpropStep(StepMethod):
         self.error = error
         
     def setup(self, starting_layers) -> None:
-        self.accumulated_gradient: list[tuple[NDArray[numpy.floating], NDArray[numpy.floating]]] = []
+        self.accumulated_gradient: NetworkParams = []
         for (W,b) in starting_layers:
             self.accumulated_gradient.append((np.zeros_like(W), np.zeros_like(b)))
     
-    def training_increment(self, gradient: NDArray[numpy.floating], accumulated_gradient: NDArray[numpy.floating]):
+    def training_increment(self, gradient: ArrayF, accumulated_gradient: ArrayF):
         accumulated_gradient = self.decay_rate * accumulated_gradient + (1 - self.decay_rate) * gradient**2
         adjusted_gradient = gradient / (np.sqrt(accumulated_gradient) + self.error)
         return self.learning_rate * adjusted_gradient, accumulated_gradient
@@ -115,13 +117,13 @@ class AdamStep(StepMethod):
 
     def setup(self, starting_layers) -> None:
         self.t = 0  # Time step
-        self.s: list[tuple[NDArray[numpy.floating], NDArray[numpy.floating]]] = []   # First moment vector
-        self.r: list[tuple[NDArray[numpy.floating], NDArray[numpy.floating]]] = []   # Second moment vector
+        self.s: NetworkParams = []   # First moment vector
+        self.r: NetworkParams = []   # Second moment vector
         for (W,b) in starting_layers:
             self.s.append((np.zeros_like(W), np.zeros_like(b)))
             self.r.append((np.zeros_like(W), np.zeros_like(b)))
     
-    def training_increment(self, gradient: NDArray[numpy.floating], r: NDArray[numpy.floating], s: NDArray[numpy.floating]):
+    def training_increment(self, gradient: ArrayF, r: ArrayF, s: ArrayF):
         self.t += 1
 
         s = self.beta1 * s + (1 - self.beta1) * gradient
