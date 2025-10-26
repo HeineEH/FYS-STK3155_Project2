@@ -14,8 +14,7 @@ def runge(x: T) -> T:
     return 1/(1 + 25*x**2)
 
 def generate_dataset(num = 400, noise = 0.05):
-    x = np.linspace(-3, 3, num).reshape(-1, 1)
-    np.random.shuffle(x)
+    x = np.random.uniform(-1, 1, num).reshape(-1, 1)
     y = runge(x) + noise*np.random.normal(0, 1, (num, 1))
     return x, y
 
