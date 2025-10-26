@@ -109,9 +109,18 @@ class NeuralNetwork:
     
     def autograd_compliant_cost(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction], targets: ArrayF):
         prediction = self.autograd_compliant_predict(layers, inputs, activation_funcs)
-        cost = self.cost_fun(prediction, targets)
+        flattened_params = self.flatten_params(layers)
+        cost = self.cost_fun(prediction, targets, params=flattened_params)
         return cost
 
-    def autograd_gradient(self, inputs: ArrayF, targets: ArrayF):
-        autograd_layer_grads = cast(NetworkParams, grad(self.autograd_compliant_cost, 0)(self.layers, inputs, self.activation_funcs, targets))
-        return autograd_layer_grads
+    def autograd_gradient(self, inputs: ArrayF, targets: ArrayF) -> NetworkParams:
+        autograd_func = grad(self.autograd_compliant_cost, 0) # type: ignore
+        autograd_layer_grads = autograd_func(self.layers, inputs, self.activation_funcs, targets) # type: ignore
+        return cast(NetworkParams, autograd_layer_grads) # cast to NetworkParams to get correct return type
+    
+    def flatten_params(self, layers: NetworkParams) -> ArrayF:
+        parts: list[ArrayF] = []
+        for W, b in layers:
+            parts.append(W.ravel())
+            parts.append(b.ravel())
+        return np.concatenate(parts)
