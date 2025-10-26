@@ -102,7 +102,7 @@ class NeuralNetwork:
         return self.backpropagation_batch(inputs, targets, layers)
 
     def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5):
-        self.layers = GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches)
+        GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches)
 
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):

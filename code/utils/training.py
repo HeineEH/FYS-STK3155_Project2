@@ -28,19 +28,19 @@ class TrainingMethod(ABC):
         self.step_method.caller = self
 
     @abstractmethod
-    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5) -> NetworkParams:
+    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5):
+        """Train the neural network. Mutates the layers in place."""
         ...
 
 
 # ========== Training methods ==========
 
 class GradientDescent(TrainingMethod):
-    def train(self, gradient, layers, iterations = 1000, n_batches = 5) -> NetworkParams:
+    def train(self, gradient, layers, iterations = 1000, n_batches = 5):
         self.step_method.setup(layers)
         for _ in range(iterations):
             layers_grad = gradient(self.inputs, self.targets,layers)
-            layers = self.step_method.train_step(layers_grad,layers) 
-        return layers
+            self.step_method.train_step(layers_grad,layers) 
                 
 class StochasticGradientDescent(TrainingMethod): 
     def learning_schedule(self, t: float, t0: float, t1: float): 
@@ -59,5 +59,4 @@ class StochasticGradientDescent(TrainingMethod):
                 layers_grad = gradient(self.inputs[shuffled_data][(batch_size*j):(batch_size*(j+1))], self.targets[shuffled_data][(batch_size*j):(batch_size*(j+1))],layers)
                 t = i*n_batches + j
                 self.step_method.learning_rate = self.learning_schedule(t,initial_learning_rate*70*n_batches,70*n_batches)
-                layers = self.step_method.train_step(layers_grad,layers) 
-        return layers
+                self.step_method.train_step(layers_grad,layers) 

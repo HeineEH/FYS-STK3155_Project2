@@ -19,7 +19,9 @@ class StepMethod(ABC):
     def setup(self, starting_layers: NetworkParams) -> None: ...
 
     @abstractmethod
-    def train_step(self, layers_grad: NetworkParams, layers: NetworkParams) -> NetworkParams: ...
+    def train_step(self, layers_grad: NetworkParams, layers: NetworkParams) -> NetworkParams: 
+        """Performs a single training step, updating the layers in place."""
+        ...
 
 
 
