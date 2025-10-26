@@ -41,9 +41,13 @@ class NeuralNetwork:
         # Simple feed forward pass
         return self.feed_forward_batch(inputs)
 
-    def cost_batch(self, inputs: ArrayF, targets: ArrayF):
+    def cost_batch(self, inputs: ArrayF, targets: ArrayF, include_regularization: bool = False) -> np.floating:
         predict = self.feed_forward_batch(inputs)
-        return self.cost_fun(predict, targets)
+        cost = self.cost_fun(predict, targets)
+        if include_regularization:
+            flattened_params = self.flatten_params(self.layers)
+            cost += self.cost_fun.apply_regularization(flattened_params)
+        return cost
 
     def feed_forward_batch(self, inputs: ArrayF):
         a = inputs
@@ -80,13 +84,14 @@ class NeuralNetwork:
                 dC_da = self.cost_fun.derivative(predict, target)
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
-                (W, _b) = layers[i + 1]
+                (W_prev, _b_prev) = layers[i + 1]
                 assert dC_dz is not None
-                dC_da = dC_dz @ W.T
+                dC_da = dC_dz @ W_prev.T
 
+            W, b = layers[i]
             dC_dz = dC_da*activation_der(z)
-            dC_dW = layer_input.T @ dC_dz
-            dC_db = np.sum(dC_dz, axis=0) # Sum over the batch axis to get shape (out_features,)
+            dC_dW = layer_input.T @ dC_dz + self.cost_fun.apply_regularization_derivative(W)  # Shape (in_features, out_features)
+            dC_db = np.sum(dC_dz, axis=0) + self.cost_fun.apply_regularization_derivative(b) # Sum over the batch axis to get shape (out_features,)
 
             layer_grads.append((dC_dW, dC_db))
 
@@ -110,7 +115,7 @@ class NeuralNetwork:
     def autograd_compliant_cost(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction], targets: ArrayF):
         prediction = self.autograd_compliant_predict(layers, inputs, activation_funcs)
         flattened_params = self.flatten_params(layers)
-        cost = self.cost_fun(prediction, targets, params=flattened_params)
+        cost = self.cost_fun(prediction, targets) + self.cost_fun.apply_regularization(flattened_params)
         return cost
 
     def autograd_gradient(self, inputs: ArrayF, targets: ArrayF) -> NetworkParams:

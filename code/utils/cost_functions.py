@@ -26,46 +26,53 @@ class CostFunction(ABC):
         self.lambd = lambd
 
     @abstractmethod
-    def __call__(self, y_pred: ArrayF, y_true: ArrayF, params: None | ArrayF = None) -> np.floating:
-        pass
+    def __call__(self, y_pred: ArrayF, y_true: ArrayF) -> np.floating: ...
 
     @abstractmethod
     def derivative(self, y_pred: ArrayF, y_true: ArrayF) -> ArrayF:
         """Derivative with respect to `y_pred`"""
-        pass
+        ...
 
     def _l1(self, params: ArrayF) -> np.floating: return self.lambd*np.sum(np.abs(params))
+    def _l1_derivative(self, params: ArrayF) -> ArrayF: return self.lambd*np.sign(params)
+
     def _l2(self, params: ArrayF) -> np.floating: return self.lambd*np.sum(params**2)
+    def _l2_derivative(self, params: ArrayF) -> ArrayF: return 2*self.lambd*params
 
-    def apply_regularization(self, params: None | ArrayF):
-        if self.regularization and params is None:
-            raise ValueError(f"params must be provided when using regularization ({self.regularization})")
-
+    def apply_regularization(self, params: ArrayF):
         # L1 regularization
-        if self.regularization == "L1" and params is not None:
+        if self.regularization == "L1":
             return self._l1(params)
         
         # L2 regularization
-        elif self.regularization == "L2" and params is not None:
+        elif self.regularization == "L2":
             return self._l2(params)
         
         return 0. # No regularization applied
-
+    
+    def apply_regularization_derivative(self, params: ArrayF) -> float | ArrayF:
+        # L1 regularization
+        if self.regularization == "L1":
+            return self._l1_derivative(params)
+        
+        # L2 regularization
+        elif self.regularization == "L2":
+            return self._l2_derivative(params)
+        
+        return 0.
+        
 
 class MSE(CostFunction):
-    def __call__(self, y_pred, y_true, params = None):
-        mse = np.mean((y_true - y_pred) ** 2)
-        return mse + self.apply_regularization(params)
+    def __call__(self, y_pred, y_true):
+        return np.mean((y_true - y_pred) ** 2)
     
     def derivative(self, y_pred, y_true):
         return (2 / y_true.size) * (y_pred-y_true)
 
 
 class BinaryCrossEntropy(CostFunction):
-    def __call__(self, y_pred, y_true, params = None):
-        cross_entropy = -np.sum(y_true*np.log(y_pred) + (1-y_true)*np.log(1-y_pred)) / y_true.size
-
-        return cross_entropy + self.apply_regularization(params)
+    def __call__(self, y_pred, y_true):
+        return -np.sum(y_true*np.log(y_pred) + (1-y_true)*np.log(1-y_pred)) / y_true.size
 
     def derivative(self, y_pred, y_true):
         return ((1-y_true)/(1-y_pred) - y_true/y_pred) / y_true.size
@@ -76,7 +83,7 @@ class SoftmaxCrossEntropy(CostFunction):
 
     softmax = Softmax()
     
-    def __call__(self, y_pred, y_true, params = None) -> np.floating:
+    def __call__(self, y_pred, y_true) -> np.floating:
         # y_pred is now the pre-activation z-values for the last layer
         # First apply softmax activation.
         probs = self.softmax(y_pred)
@@ -84,8 +91,7 @@ class SoftmaxCrossEntropy(CostFunction):
         # Then compute cross-entropy
         eps = 1e-12  # prevent log(0)
         cross_entropy = -np.sum(y_true*np.log(probs+eps)) / y_true.shape[0]
-
-        return cross_entropy + self.apply_regularization(params)
+        return cross_entropy
 
     def derivative(self, y_pred, y_true):
         probs = self.softmax(y_pred)
