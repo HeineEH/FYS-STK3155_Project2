@@ -1,5 +1,5 @@
 # _plot_style.mplstyle
-figure.figsize : 6, 4
+figure.figsize : 6, 4.5
 savefig.dpi : 300
 savefig.bbox : tight
 font.size : 14
