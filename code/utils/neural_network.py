@@ -45,9 +45,9 @@ class NeuralNetwork:
     def cost_batch(self, inputs: ArrayF, targets: ArrayF, include_regularization: bool = False) -> np.floating:
         predict = self.feed_forward_batch(inputs)
         cost = self.cost_fun(predict, targets)
-        if include_regularization:
-            flattened_params = self.flatten_params(self.layers)
-            cost += self.cost_fun.apply_regularization(flattened_params)
+        #if include_regularization:
+        flattened_params = self.flatten_params(self.layers)
+        cost += self.cost_fun.apply_regularization(flattened_params)
         return cost
 
     def feed_forward_batch(self, inputs: ArrayF):
@@ -70,7 +70,7 @@ class NeuralNetwork:
 
         return layer_inputs, zs, a
     
-    @nb.njit(parallel=True)
+    #@nb.njit(parallel=True)
     def backpropagation_batch(self, input: ArrayF, target: ArrayF, layers: NetworkParams):
         layer_inputs, zs, predict = self.feed_forward_saver_batch(input)
 
@@ -103,8 +103,8 @@ class NeuralNetwork:
     def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: NetworkParams):
         return self.backpropagation_batch(inputs, targets, layers)
 
-    def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5):
-        GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches)
+    def train(self, GD_method: TrainingMethod, tol: float = 1e-5, n_iterations_no_change: int = 10, max_iterations: int = 5000, n_batches: int = 5):
+        GD_method.train(self.compute_gradient, self.cost_batch, self.layers, tol = tol, n_iterations_no_change = n_iterations_no_change,max_iterations=max_iterations, n_batches=n_batches)
 
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):
