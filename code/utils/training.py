@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+import numba as nb
 
 # Typing
 from .typing_utils import ArrayF, NetworkParams
@@ -36,6 +37,8 @@ class TrainingMethod(ABC):
 # ========== Training methods ==========
 
 class GradientDescent(TrainingMethod):
+    
+    @nb.njit(parallel=True)
     def train(self, gradient, layers, iterations = 1000, n_batches = 5):
         self.step_method.setup(layers)
         for _ in range(iterations):
@@ -46,6 +49,7 @@ class StochasticGradientDescent(TrainingMethod):
     def learning_schedule(self, t: float, t0: float, t1: float): 
         return t0/(t + t1)
 
+    @nb.njit(parallel=True)
     def train(self, gradient, layers, iterations = 1000, n_batches = 5):
         n_datapoints = self.inputs.shape[0]
         batch_size = int(n_datapoints/n_batches)

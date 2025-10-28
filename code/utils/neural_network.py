@@ -1,5 +1,6 @@
 from __future__ import annotations
 from autograd import grad # pyright: ignore[reportUnknownVariableType]
+import numba as nb
 
 # Typing
 from .typing_utils import ArrayF, NetworkParams
@@ -69,6 +70,7 @@ class NeuralNetwork:
 
         return layer_inputs, zs, a
     
+    @nb.njit(parallel=True)
     def backpropagation_batch(self, input: ArrayF, target: ArrayF, layers: NetworkParams):
         layer_inputs, zs, predict = self.feed_forward_saver_batch(input)
 
