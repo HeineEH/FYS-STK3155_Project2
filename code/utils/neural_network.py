@@ -4,7 +4,7 @@ from autograd import grad # pyright: ignore[reportUnknownVariableType]
 # Typing
 from .typing_utils import ArrayF, NetworkParams
 from .activation_functions import ActivationFunction
-from .cost_functions import CostFunction
+from .cost_functions import MSE, CostFunction
 from utils.training import TrainingMethod
 from typing import TYPE_CHECKING, Sequence, cast
 if TYPE_CHECKING:
@@ -13,6 +13,7 @@ else:
     import autograd.numpy as np  # runtime
 
 
+mse = MSE()
 class NeuralNetwork:
     def __init__(
         self,
@@ -40,6 +41,10 @@ class NeuralNetwork:
     def predict(self, inputs: ArrayF):
         # Simple feed forward pass
         return self.feed_forward_batch(inputs)
+
+    def mse_batch(self, inputs: ArrayF, targets: ArrayF) -> np.floating:
+        predict = self.feed_forward_batch(inputs)
+        return mse(predict, targets)
 
     def cost_batch(self, inputs: ArrayF, targets: ArrayF, include_regularization: bool = False) -> np.floating:
         predict = self.feed_forward_batch(inputs)
@@ -101,9 +106,9 @@ class NeuralNetwork:
     def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: NetworkParams):
         return self.backpropagation_batch(inputs, targets, layers)
 
-    def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5):
-        GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches)
-
+    def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5, track_mse = False):
+        return GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches, mse_track_func=(self.mse_batch if track_mse else None))
+    
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):
         a = inputs
