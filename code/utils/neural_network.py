@@ -1,6 +1,5 @@
 from __future__ import annotations
 from autograd import grad # pyright: ignore[reportUnknownVariableType]
-import numba as nb
 import matplotlib.pyplot as plt
 
 # Typing

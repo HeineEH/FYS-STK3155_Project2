@@ -1,6 +1,5 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-import numba as nb
 
 # Typing
 from .typing_utils import ArrayF, NetworkParams
