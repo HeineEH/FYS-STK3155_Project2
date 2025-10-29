@@ -1,6 +1,7 @@
 from __future__ import annotations
 from autograd import grad # pyright: ignore[reportUnknownVariableType]
 import numba as nb
+import matplotlib.pyplot as plt
 
 # Typing
 from .typing_utils import ArrayF, NetworkParams
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
 else:
     import autograd.numpy as np  # runtime
 
+np.random.seed(136)
 
 class NeuralNetwork:
     def __init__(
@@ -27,6 +29,7 @@ class NeuralNetwork:
         self.activation_funcs = activation_funcs
         self.cost_fun = cost_fun
         self.layers = self.create_layers_batch()
+        self.loss = []
         
     def create_layers_batch(self):
         layers: NetworkParams = []
@@ -103,8 +106,13 @@ class NeuralNetwork:
     def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: NetworkParams):
         return self.backpropagation_batch(inputs, targets, layers)
 
-    def train(self, GD_method: TrainingMethod, tol: float = 1e-5, n_iterations_no_change: int = 10, max_iterations: int = 5000, n_batches: int = 5):
+    def train(self, GD_method: TrainingMethod, tol: float = 1e-4, n_iterations_no_change: int = 20, max_iterations: int = 5000, n_batches: int = 5):
         GD_method.train(self.compute_gradient, self.cost_batch, self.layers, tol = tol, n_iterations_no_change = n_iterations_no_change,max_iterations=max_iterations, n_batches=n_batches)
+        self.loss = GD_method.train_loss
+
+    def plot_loss(self): 
+        plt.loglog(range(len(self.loss)),self.loss)
+        plt.show()
 
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):

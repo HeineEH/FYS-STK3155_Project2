@@ -27,6 +27,7 @@ class TrainingMethod(ABC):
         self.inputs = inputs
         self.targets = targets
         self.step_method.caller = self
+        self.train_loss = []
 
     @abstractmethod
     def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5):
@@ -39,12 +40,12 @@ class TrainingMethod(ABC):
 class GradientDescent(TrainingMethod):
 
     #@nb.njit(parallel=True)
-    def train(self, gradient, loss, layers, tol = 1e-4, n_iterations_no_change = 5,max_iterations = 5000, n_batches = 5):
+    def train(self, gradient, loss, layers, tol = 1e-4, n_iterations_no_change = 20,max_iterations = 5000, n_batches = 5):
         self.step_method.setup(layers)
-        self.train_loss = []
         n = 0
+        self.train_loss.append(loss(self.inputs,self.targets))
 
-        while (max(self.train_loss[-n_iterations_no_change:]) - min(self.train_loss[-n_iterations_no_change:]) < tol and n < max_iterations) or n < n_iterations_no_change:
+        while (max(self.train_loss[-n_iterations_no_change:]) - min(self.train_loss[-n_iterations_no_change:]) > tol and n < max_iterations) or n < n_iterations_no_change:
         #for _ in range(iterations):
             n += 1
             layers_grad = gradient(self.inputs, self.targets,layers)
@@ -56,22 +57,22 @@ class StochasticGradientDescent(TrainingMethod):
         return t0/(t + t1)
 
     #@nb.njit(parallel=True)
-    def train(self, gradient, loss, layers, tol = 1e-5, n_iterations_no_change = 10, max_iterations = 5000, n_batches = 5):
+    def train(self, gradient, loss, layers, tol = 1e-4, n_iterations_no_change = 20, max_iterations = 5000, n_batches = 5):
         n_datapoints = self.inputs.shape[0]
         batch_size = int(n_datapoints/n_batches)
         initial_learning_rate = self.step_method.learning_rate/n_batches   # divide by number of batches to take care of bias in cost functions
         self.step_method.setup(layers)
-        self.train_loss = [loss(self.inputs,self.targets)]
+        self.train_loss.append(loss(self.inputs,self.targets))
         n = 0
         
-        while (max(self.train_loss[-n_iterations_no_change:]) - min(self.train_loss[-n_iterations_no_change:]) < tol and n < max_iterations) or n < n_iterations_no_change:
+        while (max(self.train_loss[-n_iterations_no_change:]) - min(self.train_loss[-n_iterations_no_change:]) > tol and n < max_iterations) or n < n_iterations_no_change:
         #for i in range(iterations):
             shuffled_data = np.array(range(n_datapoints))
             np.random.shuffle(shuffled_data)
             for j in range(n_batches): 
                 layers_grad = gradient(self.inputs[shuffled_data][(batch_size*j):(batch_size*(j+1))], self.targets[shuffled_data][(batch_size*j):(batch_size*(j+1))],layers)
                 t = n*n_batches + j
-                self.step_method.learning_rate = self.learning_schedule(t,initial_learning_rate*70*n_batches,70*n_batches)
+                self.step_method.learning_rate = self.learning_schedule(t,initial_learning_rate*20*n_batches,20*n_batches)
                 self.step_method.train_step(layers_grad,layers) 
             n += 1
             self.train_loss.append(loss(self.inputs,self.targets))
