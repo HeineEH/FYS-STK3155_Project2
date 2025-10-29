@@ -1,4 +1,5 @@
 from __future__ import annotations
+import matplotlib.pyplot as plt
 
 # Typing
 from .typing_utils import ArrayF, NetworkParams
@@ -30,3 +31,13 @@ def check_layer_params_equality(params1: NetworkParams, params2: NetworkParams) 
             return False
         
     return True
+
+def plot_mse_data(mse_data: ArrayF):
+    if mse_data.shape[1] != 3:
+        raise ValueError("mse_data must have shape (num_iterations, 3): (iterations, train_mse, test_mse)")
+    plt.plot(mse_data[:, 0], mse_data[:, 1], label="Train MSE", alpha=0.8)
+    plt.plot(mse_data[:, 0], mse_data[:, 2], label="Test MSE")
+    plt.xlabel("Iterations")
+    plt.ylabel("MSE")
+    plt.yscale("log")
+    plt.legend()
