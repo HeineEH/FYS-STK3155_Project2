@@ -28,15 +28,20 @@ class NeuralNetwork:
         self.cost_fun = cost_fun
         self.layers = self.create_layers_batch()
         
-    def create_layers_batch(self):
+    def create_layers_batch(self, random_state: int | None = None):
+        rng = np.random.default_rng(random_state)
+
         layers: NetworkParams = []
         i_size = self.network_input_size
         for layer_output_size in self.layer_output_sizes:
-            W = np.random.randn(layer_output_size, i_size).T
+            W = rng.standard_normal((layer_output_size, i_size)).T
             b = np.ones(layer_output_size)*0.01
             layers.append((W, b))
             i_size = layer_output_size
         return layers
+
+    def reset_layers(self, random_state: int | None = None):
+        self.layers = self.create_layers_batch(random_state=random_state)
 
     def predict(self, inputs: ArrayF):
         # Simple feed forward pass
