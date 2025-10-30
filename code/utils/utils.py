@@ -1,6 +1,9 @@
 from __future__ import annotations
 import matplotlib.pyplot as plt
 
+from utils.neural_network import NeuralNetwork
+from utils.training import TrainingMethod
+
 # Typing
 from .typing_utils import ArrayF, NetworkParams
 from typing import TYPE_CHECKING, TypeVar
@@ -41,3 +44,20 @@ def plot_mse_data(mse_data: ArrayF):
     plt.ylabel("MSE")
     plt.yscale("log")
     plt.legend()
+
+
+def analyze_model_learning_rates(
+        model: NeuralNetwork,
+        training_method: TrainingMethod,
+        learning_rates: list[float],
+        num_iterations = 3000
+    ):
+    mse_data = np.zeros((len(learning_rates)))
+    for i, learning_rate in enumerate(learning_rates):
+        model.reset_layers(random_state=124)
+        training_method.step_method.learning_rate = learning_rate
+        model.train(training_method, num_iterations, n_batches=5)
+        if (training_method.test_inputs is not None) and (training_method.test_targets is not None):
+            mse_data[i] = model.mse_batch(training_method.test_inputs, training_method.test_targets)
+            
+    return mse_data
