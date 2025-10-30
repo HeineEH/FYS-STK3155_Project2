@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Typing
 from .typing_utils import ArrayF, NetworkParams
-from .activation_functions import ActivationFunction
+from .activation_functions import ActivationFunction, Softmax
 from .cost_functions import CostFunction
 from utils.training import TrainingMethod
 from typing import TYPE_CHECKING, Sequence, cast
@@ -111,7 +111,7 @@ class NeuralNetwork:
 
     def plot_loss(self): 
         plt.loglog(range(len(self.loss)),self.loss)
-        plt.show()
+        plt.show()    
 
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):
