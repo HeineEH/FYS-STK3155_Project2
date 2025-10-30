@@ -50,14 +50,21 @@ def analyze_model_learning_rates(
         model: NeuralNetwork,
         training_method: TrainingMethod,
         learning_rates: list[float],
-        num_iterations = 3000
+        num_iterations = 3000, 
+        track_mse = False
     ):
-    mse_data = np.zeros((len(learning_rates)))
+    if track_mse:
+        mse_data = np.zeros((num_iterations,len(learning_rates)))
+    else: 
+        mse_data = np.zeros((len(learning_rates)))
     for i, learning_rate in enumerate(learning_rates):
         model.reset_layers(random_state=124)
         training_method.step_method.learning_rate = learning_rate
-        model.train(training_method, num_iterations, n_batches=5)
+        mse_vals = model.train(training_method, num_iterations, n_batches=5,track_mse = track_mse)
         if (training_method.test_inputs is not None) and (training_method.test_targets is not None):
-            mse_data[i] = model.mse_batch(training_method.test_inputs, training_method.test_targets)
+            if track_mse: 
+               mse_data[:,i] = mse_vals[:,2] 
+            else: 
+                mse_data[i] = model.mse_batch(training_method.test_inputs, training_method.test_targets)
             
     return mse_data
