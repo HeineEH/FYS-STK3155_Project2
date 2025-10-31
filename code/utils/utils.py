@@ -1,5 +1,6 @@
 from __future__ import annotations
 import matplotlib.pyplot as plt
+from sklearn.datasets import fetch_openml
 
 from utils.neural_network import NeuralNetwork
 from utils.training import TrainingMethod
@@ -21,6 +22,30 @@ def generate_dataset(num = 400, noise = 0.05):
     x = np.random.uniform(-1, 1, num).reshape(-1, 1)
     y = runge(x) + noise*np.random.normal(0, 1, (num, 1))
     return x, y
+
+def get_MNIST_dataset():
+    # Fetch the MNIST dataset
+
+    # Fetch the MNIST dataset
+    mnist = fetch_openml('mnist_784', version=1, as_frame=False, parser='auto')
+
+    # Extract data (features) and target (labels)
+    X = mnist.data
+    y = mnist.target
+
+    return X, y
+    
+def show_images(X, y):
+    cols = 5
+    rows = int(len(X)/cols) + 1
+    plt.figure(figsize=(30,20))
+    index = 1
+    for image, title_text in zip(X, y):        
+        plt.subplot(rows, cols, index)        
+        plt.imshow(image.reshape(28, 28), cmap="gray")
+        if (title_text != ''):
+            plt.title(title_text, fontsize = 15);        
+        index += 1
 
 def check_layer_params_equality(params1: NetworkParams, params2: NetworkParams) -> bool:
     if len(params1) != len(params2):
