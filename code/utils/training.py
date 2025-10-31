@@ -82,7 +82,7 @@ class StochasticGradientDescent(TrainingMethod):
                 batch_targets = self.targets[shuffled_data][(batch_size*j):(batch_size*(j+1))]
                 layers_grad = gradient(batch_inputs, batch_targets,layers)
                 t = i*n_batches + j
-                self.step_method.learning_rate = self.learning_schedule(t,initial_learning_rate*70*n_batches,70*n_batches)
+                self.step_method.learning_rate = self.learning_schedule(t,initial_learning_rate*30*n_batches,30*n_batches)
                 self.step_method.train_step(layers_grad,layers)
                 
             if mse_track_func is not None:
