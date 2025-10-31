@@ -15,7 +15,7 @@ else:
 
 T = TypeVar("T", float, ArrayF)
 def runge(x: T) -> T:
-    return 1/(1 + 25*x**2)
+    return 1./(1. + 25*x**2)
 
 def generate_dataset(num = 400, noise = 0.05):
     x = np.random.uniform(-1, 1, num).reshape(-1, 1)
