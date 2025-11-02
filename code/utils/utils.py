@@ -23,6 +23,9 @@ def generate_dataset(num = 400, noise = 0.05):
     y = runge(x) + noise*np.random.normal(0, 1, (num, 1))
     return x, y
 
+def onehot_encode_mnist_labels(y):
+    return np.eye(10)[y.astype(int)]
+
 def get_MNIST_dataset():
     # Fetch the MNIST dataset
 
@@ -33,8 +36,11 @@ def get_MNIST_dataset():
     X = mnist.data
     y = mnist.target
 
+    # One-hot encode the labels
+    y = onehot_encode_mnist_labels(y)
+
     return X, y
-    
+
 def show_images(X, y):
     cols = 5
     rows = int(len(X)/cols) + 1
