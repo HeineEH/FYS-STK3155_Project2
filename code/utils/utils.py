@@ -26,6 +26,9 @@ def generate_dataset(num = 400, noise = 0.05):
 def onehot_encode_mnist_labels(y):
     return np.eye(10)[y.astype(int)]
 
+def onehot_decode_mnist_labels(y_onehot):
+    return np.argmax(y_onehot, axis=1)
+
 def get_MNIST_dataset():
     # Fetch the MNIST dataset
 
