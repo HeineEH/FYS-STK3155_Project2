@@ -89,8 +89,7 @@ class SoftmaxCrossEntropy(CostFunction):
         probs = self.softmax(y_pred)
 
         # Then compute cross-entropy
-        eps = 1e-12  # prevent log(0)
-        cross_entropy = -np.sum(y_true*np.log(probs+eps)) / y_true.shape[0]
+        cross_entropy = -np.sum(y_true*np.log(probs)) / y_true.shape[0]
         return cross_entropy
 
     def derivative(self, y_pred, y_true):
