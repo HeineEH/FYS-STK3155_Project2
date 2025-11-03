@@ -39,6 +39,9 @@ def get_MNIST_dataset():
     X = mnist.data
     y = mnist.target
 
+    # Scale the data to [0, 1]
+    X = X / 255.0
+
     # One-hot encode the labels
     y = onehot_encode_mnist_labels(y)
 
