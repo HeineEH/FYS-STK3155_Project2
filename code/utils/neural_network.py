@@ -21,12 +21,13 @@ class NeuralNetwork:
         layer_output_sizes: list[int],
         activation_funcs: Sequence[ActivationFunction],
         cost_fun: CostFunction,
+        layers_random_state: int | None = None
     ):
         self.network_input_size = network_input_size
         self.layer_output_sizes = layer_output_sizes
         self.activation_funcs = activation_funcs
         self.cost_fun = cost_fun
-        self.layers = self.create_layers_batch()
+        self.layers = self.create_layers_batch(random_state=layers_random_state)
         
     def create_layers_batch(self, random_state: int | None = None):
         rng = np.random.default_rng(random_state)
