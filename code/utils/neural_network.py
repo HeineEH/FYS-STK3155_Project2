@@ -140,3 +140,16 @@ class NeuralNetwork:
             parts.append(W.ravel())
             parts.append(b.ravel())
         return np.concatenate(parts)
+    
+    # String representation with layer info
+    def __str__(self):
+        s = "Neural Network:"
+        s += f"\n\tLayers:\t\t {self.network_input_size}"
+        for layer in zip(self.layer_output_sizes, self.activation_funcs):
+            s += f" -> {layer[0]} ({type(layer[1]).__name__})"
+
+        s += f"\n\tCost function:\t {type(self.cost_fun).__name__}"
+        if self.cost_fun.regularization is not None:
+            s += f"\n\tRegularization:\t {self.cost_fun.regularization} (λ={self.cost_fun.lambd:.1e})\n"
+
+        return s
