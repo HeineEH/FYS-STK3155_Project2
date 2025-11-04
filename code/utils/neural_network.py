@@ -112,8 +112,8 @@ class NeuralNetwork:
     def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: NetworkParams):
         return self.backpropagation_batch(inputs, targets, layers)
 
-    def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5, track_mse = False):
-        return GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches, mse_track_func=(self.mse_batch if track_mse else None))
+    def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5, track_mse = False, verbose = False):
+        return GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches, mse_track_func=(self.mse_batch if track_mse else None), verbose=verbose)
     
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):

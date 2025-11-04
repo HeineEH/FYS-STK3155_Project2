@@ -34,7 +34,7 @@ class TrainingMethod(ABC):
 
 
     @abstractmethod
-    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, mse_track_func: MSETrackFunc | None = None) -> ArrayF:
+    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, mse_track_func: MSETrackFunc | None = None, verbose = False) -> ArrayF:
         """Train the neural network. Mutates the layers in place."""
         ...
 
@@ -42,14 +42,17 @@ class TrainingMethod(ABC):
 # ========== Training methods ==========
 
 class GradientDescent(TrainingMethod):
-    def train(self, gradient, layers, iterations = 1000, n_batches = 5, mse_track_func = None):
+    def train(self, gradient, layers, iterations = 1000, n_batches = 5, mse_track_func = None, verbose = False):
         self.step_method.setup(layers)
 
         mse_values = np.zeros((iterations, 3)) if mse_track_func is not None else np.array([])
 
         for i in range(iterations):
             layers_grad = gradient(self.inputs, self.targets,layers)
-            self.step_method.train_step(layers_grad,layers) 
+            self.step_method.train_step(layers_grad,layers)
+
+            if verbose:
+                print(f"Iteration {i+1}/{iterations}\t\t", end="\r") # Print progress, overwriting the same line
 
             if mse_track_func is not None:
                 mse_values[i] = (
@@ -66,7 +69,7 @@ class StochasticGradientDescent(TrainingMethod):
     def learning_schedule(self, t: float, t0: float, t1: float): 
         return t0/(t + t1)
 
-    def train(self, gradient, layers, iterations = 1000, n_batches = 5, mse_track_func = None):
+    def train(self, gradient, layers, iterations = 1000, n_batches = 5, mse_track_func = None, verbose = False):
         n_datapoints = self.inputs.shape[0]
         batch_size = int(n_datapoints/n_batches)
         initial_learning_rate = self.step_method.learning_rate/n_batches   # divide by number of batches to take care of bias in cost functions
@@ -78,6 +81,8 @@ class StochasticGradientDescent(TrainingMethod):
             shuffled_data = np.array(range(n_datapoints))
             np.random.shuffle(shuffled_data)
             for j in range(n_batches): 
+                if verbose:
+                    print(f"Epoch {i+1}/{iterations}, Batch {j+1}/{n_batches}\t\t", end="\r") # Print progress, overwriting the same line
                 batch_inputs = self.inputs[shuffled_data][(batch_size*j):(batch_size*(j+1))]
                 batch_targets = self.targets[shuffled_data][(batch_size*j):(batch_size*(j+1))]
                 layers_grad = gradient(batch_inputs, batch_targets,layers)
