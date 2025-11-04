@@ -58,4 +58,4 @@ class Softmax(ActivationFunction):
         return s
 
     def derivative(self, z): # type: ignore
-        raise NotImplementedError("Derivative of Softmax is not implemented. Use `SoftmaxCrossEntropy` cost function instead, with no last layer activation (identity func).")
+        raise NotImplementedError("Derivative of Softmax is not implemented.")

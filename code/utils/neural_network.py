@@ -1,10 +1,11 @@
 from __future__ import annotations
 from autograd import grad # pyright: ignore[reportUnknownVariableType]
+from .cost_functions import MSE, MulticlassCrossEntropy, softmax_crossentropy_derivative
 
 # Typing
 from .typing_utils import ArrayF, NetworkParams
-from .activation_functions import ActivationFunction
-from .cost_functions import MSE, CostFunction
+from .activation_functions import ActivationFunction, Softmax
+from .cost_functions import CostFunction
 from utils.training import TrainingMethod
 from typing import TYPE_CHECKING, Sequence, cast
 if TYPE_CHECKING:
@@ -28,6 +29,15 @@ class NeuralNetwork:
         self.activation_funcs = activation_funcs
         self.cost_fun = cost_fun
         self.layers = self.create_layers_batch(random_state=layers_random_state)
+
+
+        # Check that Softmax and MulticlassCrossEntropy are used together
+        uses_softmax = isinstance(activation_funcs[-1], Softmax)
+        uses_cross_entropy = isinstance(cost_fun, MulticlassCrossEntropy)
+        if uses_softmax != uses_cross_entropy:
+            raise ValueError("Softmax activation function must be used with MulticlassCrossEntropy cost function, and vice versa.")
+        self.softmax_crossentropy_special_case = uses_softmax and uses_cross_entropy
+
         
     def create_layers_batch(self, random_state: int | None = None):
         rng = np.random.default_rng(random_state)
@@ -92,15 +102,21 @@ class NeuralNetwork:
 
             if i == len(layers) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                dC_da = self.cost_fun.derivative(predict, target)
+
+                if self.softmax_crossentropy_special_case:
+                    # Special case for MulticlassCrossEntropy with Softmax activation
+                    dC_dz = softmax_crossentropy_derivative(z, target)
+                else:
+                    dC_da = self.cost_fun.derivative(predict, target)
+                    dC_dz = dC_da*activation_der(z)
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W_prev, _b_prev) = layers[i + 1]
                 assert dC_dz is not None
                 dC_da = dC_dz @ W_prev.T
+                dC_dz = dC_da*activation_der(z)
 
             W, b = layers[i]
-            dC_dz = dC_da*activation_der(z)
             dC_dW = layer_input.T @ dC_dz + self.cost_fun.apply_regularization_derivative(W)  # Shape (in_features, out_features)
             dC_db = np.sum(dC_dz, axis=0) + self.cost_fun.apply_regularization_derivative(b) # Sum over the batch axis to get shape (out_features,)
 

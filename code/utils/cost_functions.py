@@ -78,20 +78,15 @@ class BinaryCrossEntropy(CostFunction):
         return ((1-y_true)/(1-y_pred) - y_true/y_pred) / y_true.size
 
 
-class SoftmaxCrossEntropy(CostFunction):
-    """Multiclass cross-entropy with softmax activation included"""
-
-    softmax = Softmax()
-    
+class MulticlassCrossEntropy(CostFunction):
     def __call__(self, y_pred, y_true) -> np.floating:
-        # y_pred is now the pre-activation z-values for the last layer
-        # First apply softmax activation.
-        probs = self.softmax(y_pred)
-
-        # Then compute cross-entropy
-        cross_entropy = -np.sum(y_true*np.log(probs)) / y_true.shape[0]
+        cross_entropy = -np.sum(y_true*np.log(y_pred)) / y_true.shape[0]
         return cross_entropy
 
     def derivative(self, y_pred, y_true):
-        probs = self.softmax(y_pred)
-        return (probs-y_true) / y_true.shape[0]
+        raise NotImplementedError("Derivative of MulticlassCrossEntropy is not implemented.")
+
+softmax = Softmax()
+def softmax_crossentropy_derivative(logits: ArrayF, y_true: ArrayF) -> ArrayF:
+    probs = softmax(logits)
+    return (probs - y_true) / y_true.shape[0]
