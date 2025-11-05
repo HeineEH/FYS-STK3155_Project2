@@ -56,7 +56,7 @@ class GradientDescent(TrainingMethod):
 
             if track_func is not None:
                 track_values[i] = (
-                    i, 
+                    i+1, 
                     track_func(self.inputs, self.targets),
                     None
                 )
@@ -92,7 +92,7 @@ class StochasticGradientDescent(TrainingMethod):
                 
             if track_func is not None:
                 track_values[i] = (
-                    i, 
+                    i+1,
                     track_func(self.inputs, self.targets),
                     None
                 )
