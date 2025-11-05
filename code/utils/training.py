@@ -12,7 +12,7 @@ else:
 
 
 GradientFunc = Callable[[ArrayF, ArrayF, NetworkParams], NetworkParams]
-MSETrackFunc = Callable[[ArrayF, ArrayF], np.floating]
+TrackFunc = Callable[[ArrayF, ArrayF], np.floating]
 
 # Template for training methods, like gradient descent, and stochastic gradient descent
 class TrainingMethod(ABC):
@@ -34,7 +34,7 @@ class TrainingMethod(ABC):
 
 
     @abstractmethod
-    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, mse_track_func: MSETrackFunc | None = None, verbose = False) -> ArrayF:
+    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, track_func: TrackFunc | None = None, verbose = False) -> ArrayF:
         """Train the neural network. Mutates the layers in place."""
         ...
 
@@ -42,10 +42,10 @@ class TrainingMethod(ABC):
 # ========== Training methods ==========
 
 class GradientDescent(TrainingMethod):
-    def train(self, gradient, layers, iterations = 1000, n_batches = 5, mse_track_func = None, verbose = False):
+    def train(self, gradient, layers, iterations = 1000, n_batches = 5, track_func = None, verbose = False):
         self.step_method.setup(layers)
 
-        mse_values = np.zeros((iterations, 3)) if mse_track_func is not None else np.array([])
+        track_values = np.zeros((iterations, 3)) if track_func is not None else np.array([])
 
         for i in range(iterations):
             layers_grad = gradient(self.inputs, self.targets,layers)
@@ -54,28 +54,28 @@ class GradientDescent(TrainingMethod):
             if verbose:
                 print(f"Iteration {i+1}/{iterations}\t\t", end="\r") # Print progress, overwriting the same line
 
-            if mse_track_func is not None:
-                mse_values[i] = (
+            if track_func is not None:
+                track_values[i] = (
                     i, 
-                    mse_track_func(self.inputs, self.targets),
+                    track_func(self.inputs, self.targets),
                     None
                 )
                 if self.test_inputs is not None and self.test_targets is not None:
-                    mse_values[i][2] = mse_track_func(self.test_inputs, self.test_targets)
+                    track_values[i][2] = track_func(self.test_inputs, self.test_targets)
 
-        return mse_values
+        return track_values
                 
 class StochasticGradientDescent(TrainingMethod): 
     def learning_schedule(self, t: float, t0: float, t1: float): 
         return t0/(t + t1)
 
-    def train(self, gradient, layers, iterations = 1000, n_batches = 5, mse_track_func = None, verbose = False):
+    def train(self, gradient, layers, iterations = 1000, n_batches = 5, track_func = None, verbose = False):
         n_datapoints = self.inputs.shape[0]
         batch_size = int(n_datapoints/n_batches)
         initial_learning_rate = self.step_method.learning_rate/n_batches   # divide by number of batches to take care of bias in cost functions
         self.step_method.setup(layers)
 
-        mse_values = np.zeros((iterations, 3)) if mse_track_func is not None else np.array([])
+        track_values = np.zeros((iterations, 3)) if track_func is not None else np.array([])
 
         for i in range(iterations):
             shuffled_data = np.array(range(n_datapoints))
@@ -90,13 +90,13 @@ class StochasticGradientDescent(TrainingMethod):
                 self.step_method.learning_rate = self.learning_schedule(t,initial_learning_rate*30*n_batches,30*n_batches)
                 self.step_method.train_step(layers_grad,layers)
                 
-            if mse_track_func is not None:
-                mse_values[i] = (
+            if track_func is not None:
+                track_values[i] = (
                     i, 
-                    mse_track_func(self.inputs, self.targets),
+                    track_func(self.inputs, self.targets),
                     None
                 )
                 if self.test_inputs is not None and self.test_targets is not None:
-                    mse_values[i][2] = mse_track_func(self.test_inputs, self.test_targets)
+                    track_values[i][2] = track_func(self.test_inputs, self.test_targets)
 
-        return mse_values
+        return track_values
