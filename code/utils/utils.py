@@ -110,7 +110,8 @@ def analyze_model_learning_rates(
 
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred, normalize='true')
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot(cmap='Blues')
-    plt.title("Confusion Matrix")
-    plt.show()
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm*100)
+    disp.plot(cmap='Blues', values_format='.1f', )
+    plt.gcf().set_size_inches(7, 6)
+
+    return cm
