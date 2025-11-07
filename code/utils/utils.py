@@ -48,14 +48,17 @@ def get_MNIST_dataset():
 
     return X, y
 
-def show_images(X, y):
+def show_images(X, y=None):
     cols = 5
     rows = int(len(X)/cols) + 1
     plt.figure(figsize=(30,20))
     index = 1
+    if y is None:
+        y = [''] * len(X)
     for image, title_text in zip(X, y):        
         plt.subplot(rows, cols, index)        
         plt.imshow(image.reshape(28, 28), cmap="gray")
+        plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
         if (title_text != ''):
             plt.title(title_text, fontsize = 15);        
         index += 1
