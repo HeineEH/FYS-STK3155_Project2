@@ -61,6 +61,13 @@ class NeuralNetwork:
     def mse_batch(self, inputs: ArrayF, targets: ArrayF) -> np.floating:
         predict = self.feed_forward_batch(inputs)
         return mse(predict, targets)
+    
+    def accuracy_batch(self, inputs: ArrayF, targets: ArrayF) -> np.floating:
+        predict = self.feed_forward_batch(inputs)
+        predicted_classes = np.argmax(predict, axis=1)
+        true_classes = np.argmax(targets, axis=1)
+        accuracy = np.mean(predicted_classes == true_classes)
+        return accuracy
 
     def cost_batch(self, inputs: ArrayF, targets: ArrayF, include_regularization: bool = False) -> np.floating:
         predict = self.feed_forward_batch(inputs)
@@ -128,8 +135,26 @@ class NeuralNetwork:
     def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: NetworkParams):
         return self.backpropagation_batch(inputs, targets, layers)
 
-    def train(self, GD_method: TrainingMethod, num_iterations: int, n_batches: int = 5, track_mse = False, verbose = False):
-        return GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches, mse_track_func=(self.mse_batch if track_mse else None), verbose=verbose)
+    def train(
+            self,
+            GD_method: TrainingMethod,
+            num_iterations: int,
+            n_batches: int = 5,
+            track_mse = False,
+            track_accuracy = False,
+            verbose = False
+    ):
+        if track_mse and track_accuracy:
+            raise ValueError("Cannot track both MSE and accuracy at the same time.")
+        
+        if track_mse:
+            track_func = self.mse_batch
+        elif track_accuracy:
+            track_func = self.accuracy_batch
+        else:
+            track_func = None
+
+        return GD_method.train(self.compute_gradient, self.layers, iterations=num_iterations, n_batches=n_batches, track_func=track_func, verbose=verbose)
     
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):

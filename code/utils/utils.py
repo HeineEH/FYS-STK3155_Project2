@@ -1,6 +1,7 @@
 from __future__ import annotations
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_openml
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
 from utils.neural_network import NeuralNetwork
 from utils.training import TrainingMethod
@@ -108,3 +109,12 @@ def analyze_model_learning_rates(
                 mse_data[i] = model.mse_batch(training_method.test_inputs, training_method.test_targets)
             
     return mse_data
+
+
+def plot_confusion_matrix(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred, normalize='true')
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm*100)
+    disp.plot(cmap='Blues', values_format='.1f', )
+    plt.gcf().set_size_inches(7, 6)
+
+    return cm
