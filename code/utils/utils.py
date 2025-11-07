@@ -121,3 +121,13 @@ def plot_confusion_matrix(y_true, y_pred):
     plt.gcf().set_size_inches(7, 6)
 
     return cm
+
+# Cell magic to skip cells based on condition
+from IPython.core.magic import register_cell_magic
+from IPython.core.getipython import get_ipython
+@register_cell_magic
+def skip_if(line, cell):
+    global_scope = get_ipython().user_global_ns
+    if eval(line, global_scope):  # Evaluate the condition provided in 'line'
+        return  # Skip execution if the condition is True
+    get_ipython().run_cell(cell) # Execute the cell if the condition is False
