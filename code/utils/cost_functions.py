@@ -117,7 +117,7 @@ class CostFunction(ABC):
         Returns
         -------
         float | ArrayF
-            Derivative of the regularization term (same shape as params), or 0. if none.
+            Derivative of the regularization term (same shape as params).
         """
 
         # L1 regularization
@@ -132,6 +132,7 @@ class CostFunction(ABC):
         
 
 class MSE(CostFunction):
+    """Mean squared error cost function."""
     def __call__(self, y_pred: ArrayF, y_true: ArrayF):
         return np.mean((y_true - y_pred) ** 2)
     
@@ -140,6 +141,7 @@ class MSE(CostFunction):
 
 
 class BinaryCrossEntropy(CostFunction):
+    """Binary cross-entropy cost function. Used for binary classification tasks."""
     def __call__(self, y_pred: ArrayF, y_true: ArrayF):
         return -np.sum(y_true*np.log(y_pred) + (1-y_true)*np.log(1-y_pred)) / y_true.size
 
@@ -148,6 +150,13 @@ class BinaryCrossEntropy(CostFunction):
 
 
 class MulticlassCrossEntropy(CostFunction):
+    """
+    Multi-class cross-entropy cost function. Used for multi-class classification tasks.
+    
+    Notes
+    -----
+        - Has to be used with Softmax activation in the output layer for correct behavior.
+    """
     def __call__(self, y_pred: ArrayF, y_true: ArrayF):
         cross_entropy = -np.sum(y_true*np.log(y_pred)) / y_true.shape[0]
         return cross_entropy
