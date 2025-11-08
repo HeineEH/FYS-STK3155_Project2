@@ -16,6 +16,23 @@ else:
 
 mse = MSE()
 class NeuralNetwork:
+    """
+    Feedforward neural network with backpropagation and training.
+
+    Parameters
+    ----------
+    network_input_size : int
+        Number of input features.
+    layer_output_sizes : list[int]
+        Output dimension of each hidden / output layer (in order).
+    activation_funcs : Sequence[ActivationFunction]
+        Activation functions for each layer (same length as layer_output_sizes).
+    cost_fun : CostFunction
+        Cost function instance to use for training.
+    layers_random_state : int | None, optional
+        Seed used for random initialization of layer parameters.
+    """
+
     def __init__(
         self,
         network_input_size: int,
@@ -31,7 +48,7 @@ class NeuralNetwork:
         self.layers = self.create_layers_batch(random_state=layers_random_state)
 
 
-        # Check that Softmax and MulticlassCrossEntropy are used together
+        # Check if Softmax and MulticlassCrossEntropy are used
         uses_softmax = isinstance(activation_funcs[-1], Softmax)
         uses_cross_entropy = isinstance(cost_fun, MulticlassCrossEntropy)
         if uses_softmax != uses_cross_entropy:
@@ -40,36 +57,49 @@ class NeuralNetwork:
 
         
     def create_layers_batch(self, random_state: int | None = None):
+        """Get initial layer parameters."""
         rng = np.random.default_rng(random_state)
 
         layers: NetworkParams = []
         i_size = self.network_input_size
         for layer_output_size in self.layer_output_sizes:
-            W = rng.standard_normal((layer_output_size, i_size)).T
-            b = np.ones(layer_output_size)*0.01
+            W = rng.standard_normal((layer_output_size, i_size)).T # We really want (i_size, layer_output_size) so transpose
+            b = np.ones(layer_output_size)*0.01 # Initialize biases to small constant to avoid dead neurons when using ReLU
             layers.append((W, b))
-            i_size = layer_output_size
+            i_size = layer_output_size # The next layer's input size is this layer's output size
         return layers
 
     def reset_layers(self, random_state: int | None = None):
+        """
+        Reset parameters by re-initializing layers.
+
+        Parameters
+        ----------
+        random_state : int | None, optional
+            RNG seed.
+        """
         self.layers = self.create_layers_batch(random_state=random_state)
 
-    def predict(self, inputs: ArrayF):
-        # Simple feed forward pass
-        return self.feed_forward_batch(inputs)
-
     def mse_batch(self, inputs: ArrayF, targets: ArrayF) -> np.floating:
+        """Compute MSE over a batch."""
         predict = self.feed_forward_batch(inputs)
         return mse(predict, targets)
     
     def accuracy_batch(self, inputs: ArrayF, targets: ArrayF) -> np.floating:
+        """Compute classification accuracy for one-hot encoded targets."""
         predict = self.feed_forward_batch(inputs)
-        predicted_classes = np.argmax(predict, axis=1)
+
+        # The predictions and targets are one-hot encoded, so we take the argmax to get class labels
+        predicted_classes = np.argmax(predict, axis=1) 
         true_classes = np.argmax(targets, axis=1)
-        accuracy = np.mean(predicted_classes == true_classes)
+
+        # predicted_classes == true_classes gives a boolean array, it evaluates to 1 for True 
+        # and 0 for False, so we can take the mean to get accuracy.
+        accuracy = np.mean((predicted_classes == true_classes), dtype=np.floating)
         return accuracy
 
     def cost_batch(self, inputs: ArrayF, targets: ArrayF, include_regularization: bool = False) -> np.floating:
+        """Compute the cost for a batch, optionally including regularization."""
         predict = self.feed_forward_batch(inputs)
         cost = self.cost_fun(predict, targets)
         if include_regularization:
@@ -78,13 +108,45 @@ class NeuralNetwork:
         return cost
 
     def feed_forward_batch(self, inputs: ArrayF):
+        """
+        Standard batch feed-forward pass.
+
+        Parameters
+        ----------
+        inputs : ArrayF
+            Input array (batch, input_dim).
+
+        Returns
+        -------
+        ArrayF
+            Output activations from the final layer (batch, output_dim).
+        """
         a = inputs
         for (W, b), activation_func in zip(self.layers, self.activation_funcs):
             z = a @ W + b
             a = activation_func(z)
         return a
+    predict = feed_forward_batch # Alias for predict method
 
     def feed_forward_saver_batch(self, input: ArrayF):
+        """
+        Feed-forward that also returns inputs and pre-activations for each layer.
+
+        Used for manual backpropagation.
+
+        Parameters
+        ----------
+        input : ArrayF
+            Input array (batch, input_dim).
+
+        Returns
+        -------
+        tuple[list[ArrayF], list[ArrayF], ArrayF]
+            (layer_inputs, zs, final_output) where:
+            - layer_inputs: list of inputs for each layer.
+            - zs: list of pre-activation arrays for each layer.
+            - final_output: activations of the last layer.
+        """
         layer_inputs: list[ArrayF] = []
         zs: list[ArrayF] = []
         a = input
@@ -98,6 +160,19 @@ class NeuralNetwork:
         return layer_inputs, zs, a
     
     def backpropagation_batch(self, input: ArrayF, target: ArrayF, layers: NetworkParams):
+        """
+        Compute gradients for a batch using backpropagation.
+
+        Parameters
+        ----------
+        input : ArrayF
+            Input array (batch, input_dim).
+        target : ArrayF
+            Target array (batch, output_dim).
+        layers : NetworkParams
+            List of (W, b) parameter tuples to compute gradients of.
+        """
+
         layer_inputs, zs, predict = self.feed_forward_saver_batch(input)
 
         layer_grads: NetworkParams = []
@@ -124,26 +199,52 @@ class NeuralNetwork:
                 dC_dz = dC_da*activation_der(z)
 
             W, b = layers[i]
+
+            # Add regularization derivative to gradients (only adds if regularization is defined on the cost function object)
             dC_dW = layer_input.T @ dC_dz + self.cost_fun.apply_regularization_derivative(W)  # Shape (in_features, out_features)
             dC_db = np.sum(dC_dz, axis=0) + self.cost_fun.apply_regularization_derivative(b) # Sum over the batch axis to get shape (out_features,)
 
             layer_grads.append((dC_dW, dC_db))
 
+        # Reverse to get correct order
         layer_grads.reverse()
-        return layer_grads
 
-    def compute_gradient(self, inputs: ArrayF, targets: ArrayF, layers: NetworkParams):
-        return self.backpropagation_batch(inputs, targets, layers)
+        return layer_grads
+    compute_gradient = backpropagation_batch # Alias for compute_gradient method
 
     def train(
             self,
             GD_method: TrainingMethod,
             num_iterations: int,
             n_batches: int = 5,
-            track_mse = False,
-            track_accuracy = False,
-            verbose = False
-    ):
+            track_mse: bool = False,
+            track_accuracy: bool = False,
+            verbose: bool = False
+    ) -> ArrayF:
+        """
+        Train the network using the provided TrainingMethod
+
+        Parameters
+        ----------
+        GD_method : TrainingMethod
+            Traning method object implementing a `train` method.
+        num_iterations : int
+            Number of training iterations (epochs).
+        n_batches : int, default=5
+            Number of mini-batches to split the data into (passed to GD_method).
+        track_mse : bool, optional
+            If True track and return MSE history.
+        track_accuracy : bool, optional
+            If True track and return accuracy history.
+        verbose : bool, optional
+            If True print progress information.
+        
+        Returns
+        -------
+        ArrayF
+            Return value from GD_method.train (tracking history if enabled).
+        """
+        
         if track_mse and track_accuracy:
             raise ValueError("Cannot track both MSE and accuracy at the same time.")
         
@@ -158,6 +259,7 @@ class NeuralNetwork:
     
     # These last two methods are not needed in the project, but they can be nice to have! The first one has a layers parameter so that you can use autograd on it
     def autograd_compliant_predict(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction]):
+        """Predict using an explicit `layers` parameter for autograd compatibility."""
         a = inputs
         for (W, b), activation_func in zip(layers, activation_funcs):
             z = a @ W + b
@@ -165,25 +267,42 @@ class NeuralNetwork:
         return a
     
     def autograd_compliant_cost(self, layers: NetworkParams, inputs: ArrayF, activation_funcs: Sequence[ActivationFunction], targets: ArrayF):
+        """Cost function compatible with autograd. Includes regularization."""
         prediction = self.autograd_compliant_predict(layers, inputs, activation_funcs)
         flattened_params = self.flatten_params(layers)
         cost = self.cost_fun(prediction, targets) + self.cost_fun.apply_regularization(flattened_params)
         return cost
 
     def autograd_gradient(self, inputs: ArrayF, targets: ArrayF) -> NetworkParams:
+        """
+        Compute gradients using autograd by differentiating autograd_compliant_cost.
+
+        Parameters
+        ----------
+        inputs : ArrayF
+            Input array (batch, input_dim).
+        targets : ArrayF
+            Target array (batch, output_dim).
+
+        Returns
+        -------
+        NetworkParams
+            Gradients in the same structure as `self.layers`.
+        """  
         autograd_func = grad(self.autograd_compliant_cost, 0) # type: ignore
         autograd_layer_grads = autograd_func(self.layers, inputs, self.activation_funcs, targets) # type: ignore
         return cast(NetworkParams, autograd_layer_grads) # cast to NetworkParams to get correct return type
     
     def flatten_params(self, layers: NetworkParams) -> ArrayF:
+        """Flatten parameters to a 1D array."""
         parts: list[ArrayF] = []
         for W, b in layers:
             parts.append(W.ravel())
             parts.append(b.ravel())
         return np.concatenate(parts)
     
-    # String representation with layer info
     def __str__(self):
+        """String representation of the neural network with layer summary."""
         s = "Neural Network:"
         s += f"\n\tLayers:\t\t {self.network_input_size}"
         for layer in zip(self.layer_output_sizes, self.activation_funcs):
