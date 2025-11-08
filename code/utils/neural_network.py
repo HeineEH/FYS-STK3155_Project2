@@ -95,7 +95,7 @@ class NeuralNetwork:
 
         # predicted_classes == true_classes gives a boolean array, it evaluates to 1 for True 
         # and 0 for False, so we can take the mean to get accuracy.
-        accuracy = np.mean((predicted_classes == true_classes), dtype=np.floating)
+        accuracy = np.mean((predicted_classes == true_classes).astype(int), dtype=np.float64)
         return accuracy
 
     def cost_batch(self, inputs: ArrayF, targets: ArrayF, include_regularization: bool = False) -> np.floating:
