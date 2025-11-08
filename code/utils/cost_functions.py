@@ -29,24 +29,40 @@ class CostFunction(ABC):
     @abstractmethod
     def __call__(self, y_pred: ArrayF, y_true: ArrayF) -> np.floating:
         """
-        Evaluate the cost function, not including regularization terms. Regularization has to be is applied separately by using `apply_regularization`.
-        Parameters:
-            y_pred (NDArray[Float]): Predicted output array.
-            y_true (NDArray[Float]): True output array.
-        Returns:
-            NDArray[Float]: Computed cost.
+        Evaluate the cost for the provided predictions and targets, excluding regularization.
+
+        Regularization contributions can be obtained via `apply_regularization` and added by the caller when needed.
+
+        Parameters
+        ----------
+        y_pred : ArrayF
+            Predicted output array (batch x output_dim).
+        y_true : ArrayF
+            True output array (batch x output_dim).
+
+        Returns
+        -------
+        np.floating
+            Scalar cost value averaged over the batch.
         """
         ...
 
     @abstractmethod
     def derivative(self, y_pred: ArrayF, y_true: ArrayF) -> ArrayF:
         """
-        Evaluate the derivative of the cost function with respect to the predicted output `y_pred`.
-        Parameters:
-            y_pred (NDArray[Float]): Predicted output array.
-            y_true (NDArray[Float]): True output array.
-        Returns:
-            NDArray[Float]: Derivative of the cost function.
+        Compute the derivative of the cost with respect to the predictions `y_pred`.
+        
+        Parameters
+        ----------
+        y_pred : ArrayF
+            Predicted output array (batch x output_dim).
+        y_true : ArrayF
+            True output array (batch x output_dim).
+
+        Returns
+        -------
+        ArrayF
+            Array of same shape as y_pred containing dC/d(y_pred).
         """
         ...
 
@@ -59,11 +75,17 @@ class CostFunction(ABC):
 
     def apply_regularization(self, params: ArrayF):
         """
-        Apply the specified regularization to the cost function if defined.
-        Parameters:
-            params (NDArray[Float]): Model parameters to regularize.
-        Returns:
-            NDArray[Float]: Regularization term to be added to the cost.
+        Compute the regularization term for given flattened parameters.
+
+        Parameters
+        ----------
+        params : ArrayF
+            Flattened model parameters.
+
+        Returns
+        -------
+        np.floating
+            Regularization contribution to add to the cost (0. if none).
         """
         
         if self.regularization == "L1":
@@ -76,11 +98,17 @@ class CostFunction(ABC):
     
     def apply_regularization_derivative(self, params: ArrayF) -> float | ArrayF:
         """
-        Apply the derivative of the specified regularization to the cost function if defined.
-        Parameters:
-            params (NDArray[Float]): Model parameters to regularize.
-        Returns:
-            NDArray[Float]: Derivative of the regularization term to be added to the cost derivative.
+        Compute the derivative of the regularization term w.r.t. parameters.
+
+        Parameters
+        ----------
+        params : ArrayF
+            Flattened model parameters.
+
+        Returns
+        -------
+        float | ArrayF
+            Derivative of the regularization term (same shape as params), or 0. if none.
         """
 
         # L1 regularization
@@ -121,12 +149,21 @@ class MulticlassCrossEntropy(CostFunction):
 softmax = Softmax()
 def softmax_crossentropy_derivative(logits: ArrayF, y_true: ArrayF) -> ArrayF:
     """
-    Compute the derivative of the softmax cross-entropy loss with respect to the logits.
-    Parameters:
-        logits (NDArray[Float]): The input logits (pre-softmax activations).
-        y_true (NDArray[Float]): The true labels in one-hot encoded format.
-    Returns:
-        NDArray[Float]: The derivative of the loss with respect to the logits.
+    Derivative of softmax combined with multiclass cross-entropy w.r.t. logits.
+
+    This computes d/d(logits) using the shortcut: softmax(logits) - y_true, averaged over the batch.
+
+    Parameters
+    ----------
+    logits : ArrayF
+        Pre-softmax activations (batch x num_classes).
+    y_true : ArrayF
+        One-hot encoded true labels (batch x num_classes).
+
+    Returns
+    -------
+    ArrayF
+        Array of same shape as logits with the gradient of the loss w.r.t. logits.
     """
     probs = softmax(logits)
     return (probs - y_true) / y_true.shape[0]
