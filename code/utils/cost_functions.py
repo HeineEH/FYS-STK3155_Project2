@@ -12,7 +12,16 @@ else:
     import autograd.numpy as np  # runtime
 
 class CostFunction(ABC):
-    """Abstract base class for cost functions with optional regularization."""
+    """
+    Abstract base class for cost functions with optional regularization.
+    
+    Parameters
+    ----------
+    regularization : None | "L1" | "L2"
+        Type of regularization to apply to parameters. If None (default), no regularization is used.
+    lambd : float
+        Regularization strength (λ). Must be provided and non-zero when `regularization` is not None.
+    """
     regularization: None | Literal["L1", "L2"]
 
     def __init__(self, regularization: None | Literal["L1", "L2"] = None, lambd: float = 0):
