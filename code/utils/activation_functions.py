@@ -16,21 +16,33 @@ class ActivationFunction(ABC):
     def __call__(self, z: ArrayF) -> ArrayF:
         """
         Evaluate the activation function.
-        Parameters:
-            z (NDArray[Float]): Input array.
-        Returns:
-            NDArray[Float]: Activated output array.
+
+        Parameters
+        ----------
+        z : ArrayF
+            Pre-activation input array (batch x features).
+
+        Returns
+        -------
+        ArrayF
+            Activated output (same shape as z).
         """
         ...
 
     @abstractmethod
     def derivative(self, z: ArrayF) -> ArrayF:
         """
-        Evaluate the derivative of the activation function with respect to the input.
-        Parameters:
-            z (NDArray[Float]): Input array.
-        Returns:
-            NDArray[Float]: Derivative of the activation function.
+        Evaluate the derivative of the activation function.
+
+        Parameters
+        ----------
+        z : ArrayF
+            Pre-activation input array (batch x features).
+
+        Returns
+        -------
+        ArrayF
+            Elementwise derivative (same shape as z).
         """
         ...
 
@@ -38,7 +50,6 @@ class ActivationFunction(ABC):
 class Sigmoid(ActivationFunction):
     """
     Sigmoid activation function.
-    f(z) = 1 / (1 + exp(-z))
 
     Used both in hidden layers, and output layer for binary classification.
     """
@@ -50,10 +61,7 @@ class Sigmoid(ActivationFunction):
         return sig * (1 - sig)
     
 class Identity(ActivationFunction):
-    """
-    Identity activation function.
-    f(z) = z
-    """
+    """Identity activation function."""
     def __call__(self, z: ArrayF):
         return z
     
@@ -61,10 +69,7 @@ class Identity(ActivationFunction):
         return np.ones_like(z)
 
 class ReLU(ActivationFunction):
-    """
-    ReLU activation function.
-    f(z) = max(0, z)
-    """
+    """Rectified Linear Unit (ReLU) activation function."""
     def __call__(self, z: ArrayF):
         return np.maximum(0, z)
 
@@ -72,10 +77,7 @@ class ReLU(ActivationFunction):
         return (np.where(z > 0, 1, 0))
     
 class LeakyReLU(ActivationFunction):
-    """
-    Leaky ReLU activation function.
-    f(z) = max(0, z) + negative_slope * min(0, z)
-    """
+    """Leaky ReLU: keeps a small slope for negative inputs."""
     def __init__(self, negative_slope: float = 0.01):
         self.negative_slope = negative_slope
     
@@ -91,8 +93,7 @@ class Softmax(ActivationFunction):
     f(z_i) = exp(z_i) / sum_j[exp(z_j)]
 
     Typically used in the output layer for multi-class classification.
-    
-    Note: The derivative is not implemented here due to its complexity. However, backpropagation will still work when used with `MulticlassCrossEntropy`.
+    *Note:* The derivative is not implemented here due to its complexity. However, backpropagation will still work when used with the `MulticlassCrossEntropy` cost function.
     """
     def __call__(self, z: ArrayF):
         z_shift = z - np.max(z, axis=1, keepdims=True)  # To avoid taking exp of too large numbers. Gives same result.
