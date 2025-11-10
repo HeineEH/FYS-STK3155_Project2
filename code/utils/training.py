@@ -14,8 +14,8 @@ else:
 GradientFunc = Callable[[ArrayF, ArrayF, NetworkParams], NetworkParams]
 TrackFunc = Callable[[ArrayF, ArrayF], np.floating]
 
-# Template for training methods, like gradient descent, and stochastic gradient descent
 class TrainingMethod(ABC):
+    """Abstract base class for training methods which use a step method to update network parameters."""
     def __init__(
         self,
         step_method: "StepMethod",
@@ -34,7 +34,7 @@ class TrainingMethod(ABC):
 
 
     @abstractmethod
-    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, track_func: TrackFunc | None = None, verbose = False) -> ArrayF:
+    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, track_func: TrackFunc | None = None, verbose: bool = False) -> ArrayF:
         """Train the neural network. Mutates the layers in place."""
         ...
 
@@ -42,12 +42,15 @@ class TrainingMethod(ABC):
 # ========== Training methods ==========
 
 class GradientDescent(TrainingMethod):
-    def train(self, gradient, layers, iterations = 1000, n_batches = 5, track_func = None, verbose = False):
+    """Full-batch gradient descent training loop"""
+    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, track_func: TrackFunc | None = None, verbose: bool = False):
         self.step_method.setup(layers)
 
+        # Initialize tracking array
         track_values = np.zeros((iterations, 3)) if track_func is not None else np.array([])
 
         for i in range(iterations):
+            # Compute gradients and perform a training step
             layers_grad = gradient(self.inputs, self.targets,layers)
             self.step_method.train_step(layers_grad,layers)
 
@@ -55,6 +58,7 @@ class GradientDescent(TrainingMethod):
                 print(f"Iteration {i+1}/{iterations}\t\t", end="\r") # Print progress, overwriting the same line
 
             if track_func is not None:
+                # Track training and test performance
                 track_values[i] = (
                     i+1, 
                     track_func(self.inputs, self.targets),
@@ -66,31 +70,40 @@ class GradientDescent(TrainingMethod):
         return track_values
                 
 class StochasticGradientDescent(TrainingMethod): 
+    """Stochastic gradient descent training loop with a simple learning schedule."""
     def learning_schedule(self, t: float, t0: float, t1: float): 
         return t0/(t + t1)
 
-    def train(self, gradient, layers, iterations = 1000, n_batches = 5, track_func = None, verbose = False):
+    def train(self, gradient: GradientFunc, layers: NetworkParams, iterations: int = 1000, n_batches: int = 5, track_func: TrackFunc | None = None, verbose: bool = False):
         n_datapoints = self.inputs.shape[0]
         batch_size = int(n_datapoints/n_batches)
         initial_learning_rate = self.step_method.learning_rate/n_batches   # divide by number of batches to take care of bias in cost functions
         self.step_method.setup(layers)
 
+        # Initialize tracking array
         track_values = np.zeros((iterations, 3)) if track_func is not None else np.array([])
 
         for i in range(iterations):
+            # Shuffle data at the start of each epoch
             shuffled_data = np.array(range(n_datapoints))
             np.random.shuffle(shuffled_data)
+
             for j in range(n_batches): 
                 if verbose:
                     print(f"Epoch {i+1}/{iterations}, Batch {j+1}/{n_batches}\t\t", end="\r") # Print progress, overwriting the same line
+                
+                # Get the mini-batch inputs and targets based on the shuffled indices
                 batch_inputs = self.inputs[shuffled_data][(batch_size*j):(batch_size*(j+1))]
                 batch_targets = self.targets[shuffled_data][(batch_size*j):(batch_size*(j+1))]
+
+                # Compute gradients and perform a training step
                 layers_grad = gradient(batch_inputs, batch_targets,layers)
                 t = i*n_batches + j
                 self.step_method.learning_rate = self.learning_schedule(t,initial_learning_rate*30*n_batches,30*n_batches)
                 self.step_method.train_step(layers_grad,layers)
                 
             if track_func is not None:
+                # Track training and test performance
                 track_values[i] = (
                     i+1,
                     track_func(self.inputs, self.targets),
