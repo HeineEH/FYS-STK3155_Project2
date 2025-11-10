@@ -8,7 +8,7 @@ Frederik Callin Østern, Heine Elias Husdal
 
 In this project, we investigate feed forward neural networks. In particular, we perform a regression analysis on data taken from the one dimensional Runge function and a classification analysis on the MNIST dataset.
 
-In the case of regression, we investigate different training methods, including stochastic gradient descent (SGD) and ordinary gradient descent (GD), with both the Adam and RMSprop algorithms. We optimize the model architecture (given by the number of hidden layers and the number of nodes, as well as the activation functions used) in order to minimize the cost function. Moreover, we investigate whether $L_1$ or $L_2$ regularization improves model performance. With our analysis, one gains a better understanding of the performance of neural networks, as well as how they should be trained.
+In the case of regression, we investigate different training methods, including stochastic gradient descent (SGD) and ordinary gradient descent (GD), with both the Adam and RMSprop algorithms. We optimize the model architecture (given by the number of hidden layers and the number of nodes, as well as the activation functions used) in order to minimize the cost function. Moreover, we investigate whether $L1$ or $L2$ regularization improves model performance. With our analysis, one gains a better understanding of the performance of neural networks, as well as how they should be trained.
 
 In the classification part of the project, we apply feed-forward neural networks (FFNNs) to the MNIST dataset of handwritten digits. The network is trained using the Adam optimizer with multiclass cross-entropy loss. We perform a grid search over key hyperparameters, including the learning rate, regularization strength, number of hidden layers, number of nodes per layer, and activation functions. The results show how these parameters affect both training efficiency and test-set accuracy. Finally, we compare our own implementation with a corresponding _PyTorch_ model to verify implementation consistency and performance.
 
@@ -48,11 +48,11 @@ Notes
 
 ## Use of LLMs in this Project
 
-In this project, we have utilized Large Language Models (LLMs) such as ChatGPT to assist with various aspects of project. It was particularly helpful in the following areas:
+In this project, we have utilized Large Language Models (LLMs) such as ChatGPT to assist with various aspects of project. In particular, it was helpful in the following areas:
 
 - OS related issues when setting up the development environment.
 
-- Understanding error messages encountered during code execution.
+- Understanding the meaning of some of the error messages encountered during code execution.
 
 - Assisting with and understanding LaTeX syntax for the report.
 
