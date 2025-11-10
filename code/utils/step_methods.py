@@ -85,7 +85,7 @@ class ADAgradStep(StepMethod):
         adjusted_gradient = gradient / (np.sqrt(accumulated_gradient) + self.error)
         return self.learning_rate * adjusted_gradient, accumulated_gradient
     
-    def train_step(self, layers_grad, layers):
+    def train_step(self, layers_grad: NetworkParams, layers: NetworkParams):
         for (W,b),(W_g,b_g),(W_g_acc,b_g_acc) in zip(layers, layers_grad, self.accumulated_gradient): 
             W_i, W_g_acc = self.training_increment(W_g, W_g_acc)
             b_i, b_g_acc = self.training_increment(b_g, b_g_acc)
