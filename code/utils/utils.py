@@ -2,6 +2,8 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_openml
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+from IPython.core.magic import register_cell_magic
+from IPython.core.getipython import get_ipython
 
 from utils.neural_network import NeuralNetwork
 from utils.training import TrainingMethod
@@ -52,6 +54,7 @@ def get_MNIST_dataset():
     return X, y
 
 def show_images(X, y=None):
+    """Display a grid of images. Expects each image to be 28x28 pixels."""
     cols = 5
     rows = int(len(X)/cols) + 1
     plt.figure(figsize=(30,20))
@@ -67,6 +70,7 @@ def show_images(X, y=None):
         index += 1
 
 def check_layer_params_equality(params1: NetworkParams, params2: NetworkParams) -> bool:
+    """Check if two sets of network parameters are equal within a tolerance."""
     if len(params1) != len(params2):
         raise ValueError("params1 and params2 must have the same number of layers")
     
@@ -80,6 +84,7 @@ def check_layer_params_equality(params1: NetworkParams, params2: NetworkParams) 
     return True
 
 def plot_mse_data(mse_data: ArrayF):
+    """Plot training and test MSE from the provided array."""
     if mse_data.shape[1] != 3:
         raise ValueError("mse_data must have shape (num_iterations, 3): (iterations, train_mse, test_mse)")
     plt.plot(mse_data[:, 0], mse_data[:, 1], label="Train MSE", alpha=0.8)
@@ -97,6 +102,7 @@ def analyze_model_learning_rates(
         num_iterations = 3000, 
         track_mse = False
     ):
+    """Train and evaluate model performance for different learning rates."""
     if track_mse:
         mse_data = np.zeros((num_iterations,len(learning_rates)))
     else: 
@@ -115,6 +121,7 @@ def analyze_model_learning_rates(
 
 
 def plot_confusion_matrix(y_true, y_pred):
+    """Plot confusion matrix for true and predicted labels."""
     cm = confusion_matrix(y_true, y_pred, normalize='true')
     disp = ConfusionMatrixDisplay(confusion_matrix=cm*100)
     disp.plot(cmap='Blues', values_format='.1f', )
@@ -122,12 +129,10 @@ def plot_confusion_matrix(y_true, y_pred):
 
     return cm
 
-# Cell magic to skip cells based on condition
-from IPython.core.magic import register_cell_magic
-from IPython.core.getipython import get_ipython
 @register_cell_magic
 def skip_if(line, cell):
+    """Jupyter cell magic to skip execution of a cell based on a condition."""
     global_scope = get_ipython().user_global_ns
-    if eval(line, global_scope):  # Evaluate the condition provided in 'line'
+    if eval(line, global_scope):
         return  # Skip execution if the condition is True
     get_ipython().run_cell(cell) # Execute the cell if the condition is False
