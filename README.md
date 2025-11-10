@@ -20,7 +20,7 @@ In the classification part of the project, we apply feed-forward neural networks
 - `exercise_2c.ipynb` - PyTorch comparison of Runge regression in exercise **2b**
 - `exercise_2d.ipynb` - Testing different activation functions and depths of the neural network
 - `exercise_2e.ipynb` - Testing different norms
-- `exercise_2f.ipynb` - MNIST classification using our own implementation of a feed forward neural network, with hyperparameter tuning
+- `exercise_2f_manual.ipynb` - MNIST classification using our own implementation of a feed forward neural network, with hyperparameter tuning
 - `exercise_2f_pytorch.ipynb` - PyTorch comparison of MNIST classification in exercise **2f**
 
 - `utils/` - Reusable code for the neural network implementation, including:
