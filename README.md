@@ -45,3 +45,15 @@ Notes
 2. Install packages: `pip install -r requirements.txt`
 
 3. Run `.ipynb` notebooks described above.
+
+## Use of LLMs in this Project
+
+In this project, we have utilized Large Language Models (LLMs) such as ChatGPT to assist with various aspects of project. It was particularly helpful in the following areas:
+
+- OS related issues when setting up the development environment.
+
+- Understanding error messages encountered during code execution.
+
+- Assisting with and understanding LaTeX syntax for the report.
+
+- Inspiration for report title ideas. This specific chat can be found at: [https://chatgpt.com/share/6912535a-1fc8-8005-836b-3253925d4d56](https://chatgpt.com/share/6912535a-1fc8-8005-836b-3253925d4d56)
